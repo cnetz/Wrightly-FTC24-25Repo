@@ -13,12 +13,11 @@ public class PressedTest extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        boolean pressedLastIteration = false;
-
         while (opModeIsActive()) {
 
             boolean gamepad1A_pressed = gamepad1.a;
 
+<<<<<<< Updated upstream
             if (gamepad1A_pressed & !pressedLastIteration) {
                 //DO STUFF
             }
@@ -26,6 +25,12 @@ public class PressedTest extends LinearOpMode {
             pressedLastIteration = gamepad1A_pressed;
 
 
+=======
+            if (buttonHandler.isPressedOnceA(gamepad1A_pressed)) {
+                telemetry.addLine("Gampad 1 Pressed");
+                telemetry.update();
+            }
+>>>>>>> Stashed changes
 
         }
 
