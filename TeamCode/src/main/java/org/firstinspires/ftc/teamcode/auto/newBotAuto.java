@@ -16,6 +16,7 @@ public class newBotAuto extends OpMode {
     double gearRatio = 1;
     double diameter = 3.77;
     double cpi = (cpr * gearRatio)/(Math.PI * diameter);
+    double cpiSlide = (cpr * gearRatio)/(Math.PI);
     double bias = 1.0;
     double conversion = cpi * bias;
     private DcMotor middleMotor; // location 0 - eh
@@ -34,7 +35,10 @@ public class newBotAuto extends OpMode {
     private RevColorSensorV3 colorSensor;
     private boolean fiveSeconds = false;
     private boolean exit = false;
-
+    double greenColor = 0;
+    double blueColor = 0;
+    double redColor = 0;
+    double alphaColor = 0;
     @Override
     public void init() {
 
@@ -59,46 +63,81 @@ public class newBotAuto extends OpMode {
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         colorSensor.enableLed(true);
+        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
+
+    public void init_loop() {
+        updateColor();
+        updateTelemetry();
+    }
+
     @Override
     public void start() {
-
         newTimer.reset();
+        test(1000);
 
     }
 
     @Override
     public void loop() {
-        double greenColor = colorSensor.green();
-        double blueColor = colorSensor.blue();
-        double redColor = colorSensor.red();
-        double alphaColor = colorSensor.alpha();
-        if(blueColor > 2000){
-            exit = true;
-        }
-        if (!fiveSeconds && newTimer.seconds() >= 5){
-            moveToPos(12, 0.2);
+        updateColor();
+        updateTelemetry();
+        /*
+        if(blueColor > 2750) {
             strafeToPos(12, 0.2);
+
+        }
+
+        if(redColor > 1750) {
+            strafeToPos(-12, 0.2);
+        }
+
+         */
+
+        /*
+        if(blueColor > 2000){
+            stopMoving();
+            strafeToPos(12, 0.2);
+        }
+
+        if (!fiveSeconds && newTimer.seconds() >= 5){
            // moveToPos(36,0.2);
             green0.setState(true);
             red0.setState(false);
             telemetry.addData("something","test");
             telemetry.update();
             fiveSeconds = true;
+        }else {
+            moveToPos(12, 0.2);
+            moveToPos(-12, 0.2);
         }
+         */
+    }
+    @Override
+    public void stop() {
+        exit = true;
+        stopMoving();
+    }
 
+    public void updateTelemetry(){
         telemetry.addData("time", newTimer.seconds());
         telemetry.addData("blueColor", blueColor);
         telemetry.addData("alphaColor", alphaColor);
         telemetry.addData("greenColor", greenColor);
         telemetry.addData("redColor", redColor);
+        telemetry.addData("Slide", slideMotor.getCurrentPosition());
         telemetry.update();
     }
-    @Override
-    public void stop() {
+
+    public void updateColor() {
+        greenColor = colorSensor.green();
+        blueColor = colorSensor.blue();
+        redColor = colorSensor.red();
+        alphaColor = colorSensor.alpha();
     }
 
     public void moveToPos(double inches, double speed) {
+        exit = false;
         int move = (int)(Math.round(inches * conversion));
 
         frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() + move);
@@ -117,11 +156,12 @@ public class newBotAuto extends OpMode {
         backRightMotor.setPower(speed);
 
         while(frontLeftMotor.isBusy() && frontRightMotor.isBusy() && backLeftMotor.isBusy() && backRightMotor.isBusy()){
-            if (exit){
+            if(exit) {
                 frontLeftMotor.setPower(0);
                 frontRightMotor.setPower(0);
                 backLeftMotor.setPower(0);
                 backRightMotor.setPower(0);
+                return;
             }
         }
 
@@ -131,27 +171,52 @@ public class newBotAuto extends OpMode {
         backRightMotor.setPower(0);
     }
     public void strafeToPos(double inches, double speed) {
+        exit = false;
         int move = (int)(Math.round(inches * conversion));
 
-        middleMotor.setTargetPosition(middleMotor.getCurrentPosition() - move);
+        middleMotor.setTargetPosition(middleMotor.getCurrentPosition() + move);
 
         middleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         middleMotor.setPower(speed);
 
         while(middleMotor.isBusy()){
-            if (exit){
+            if (exit) {
                 middleMotor.setPower(0);
+                return;
             }
         }
 
         middleMotor.setPower(0);
-
-
     }
 
+    public void stopMoving() {
+        frontLeftMotor.setPower(0);
+        frontRightMotor.setPower(0);
+        backLeftMotor.setPower(0);
+        backRightMotor.setPower(0);
+        middleMotor.setPower(0);
+    }
+    public void moveSlide(double inches, double speed){
+        int move = (int)(Math.round(inches * cpiSlide));
+        slideMotor.setTargetPosition(slideMotor.getCurrentPosition() - move);
 
+        slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
+        slideMotor.setPower(speed);
 
+        while(slideMotor.isBusy()){
+            if (exit) {
+                slideMotor.setPower(0);
+                return;
+            }
+        }
 
+        slideMotor.setPower(0);
+    }
+    public void test(double pos){
+        jointMotor.setTargetPosition((int) pos);
+        jointMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        jointMotor.setPower(0.25);
+    }
 }
