@@ -33,10 +33,6 @@ public class newBotAuto extends OpMode {
     private RevBlinkinLedDriver.BlinkinPattern pattern;
     private RevColorSensorV3 colorSensor;
     private boolean fiveSeconds = false;
-    private double greenColor = colorSensor.green();
-    private double blueColor = colorSensor.blue();
-    private double redColor = colorSensor.red();
-    private double alphaColor = colorSensor.alpha();
     @Override
     public void init() {
 
@@ -59,16 +55,24 @@ public class newBotAuto extends OpMode {
 
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        colorSensor.enableLed(true);
     }
     @Override
     public void start() {
 
         newTimer.reset();
-
+        moveToPos(12, 0.2);
+        strafeToPos(12, 0.2);
     }
 
     @Override
     public void loop() {
+        double greenColor = colorSensor.green();
+        double blueColor = colorSensor.blue();
+        double redColor = colorSensor.red();
+        double alphaColor = colorSensor.alpha();
+
         if (!fiveSeconds && newTimer.seconds() >= 5){
            // moveToPos(36,0.2);
             green0.setState(true);
@@ -117,4 +121,26 @@ public class newBotAuto extends OpMode {
         backRightMotor.setPower(0);
 
     }
+    public void strafeToPos(double inches, double speed) {
+        int move = (int)(Math.round(inches * conversion));
+
+        middleMotor.setTargetPosition(middleMotor.getCurrentPosition() - move);
+
+        middleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        middleMotor.setPower(speed);
+
+        while(middleMotor.isBusy()){
+
+        }
+
+        middleMotor.setPower(0);
+
+
+    }
+
+
+
+
+
 }
