@@ -33,6 +33,8 @@ public class newBotAuto extends OpMode {
     private RevBlinkinLedDriver.BlinkinPattern pattern;
     private RevColorSensorV3 colorSensor;
     private boolean fiveSeconds = false;
+    private boolean exit = false;
+
     @Override
     public void init() {
 
@@ -62,8 +64,7 @@ public class newBotAuto extends OpMode {
     public void start() {
 
         newTimer.reset();
-        moveToPos(12, 0.2);
-        strafeToPos(12, 0.2);
+
     }
 
     @Override
@@ -72,8 +73,12 @@ public class newBotAuto extends OpMode {
         double blueColor = colorSensor.blue();
         double redColor = colorSensor.red();
         double alphaColor = colorSensor.alpha();
-
+        if(blueColor > 2000){
+            exit = true;
+        }
         if (!fiveSeconds && newTimer.seconds() >= 5){
+            moveToPos(12, 0.2);
+            strafeToPos(12, 0.2);
            // moveToPos(36,0.2);
             green0.setState(true);
             red0.setState(false);
@@ -112,26 +117,32 @@ public class newBotAuto extends OpMode {
         backRightMotor.setPower(speed);
 
         while(frontLeftMotor.isBusy() && frontRightMotor.isBusy() && backLeftMotor.isBusy() && backRightMotor.isBusy()){
-
+            if (exit){
+                frontLeftMotor.setPower(0);
+                frontRightMotor.setPower(0);
+                backLeftMotor.setPower(0);
+                backRightMotor.setPower(0);
+            }
         }
 
         frontLeftMotor.setPower(0);
         frontRightMotor.setPower(0);
         backLeftMotor.setPower(0);
         backRightMotor.setPower(0);
-
     }
     public void strafeToPos(double inches, double speed) {
         int move = (int)(Math.round(inches * conversion));
 
-        middleMotor.setTargetPosition(middleMotor.getCurrentPosition() + move);
+        middleMotor.setTargetPosition(middleMotor.getCurrentPosition() - move);
 
         middleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         middleMotor.setPower(speed);
 
         while(middleMotor.isBusy()){
-
+            if (exit){
+                middleMotor.setPower(0);
+            }
         }
 
         middleMotor.setPower(0);
