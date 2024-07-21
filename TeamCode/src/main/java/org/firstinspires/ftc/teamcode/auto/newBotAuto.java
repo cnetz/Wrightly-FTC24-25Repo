@@ -16,7 +16,7 @@ public class newBotAuto extends OpMode {
     double gearRatio = 1;
     double diameter = 3.77;
     double cpi = (cpr * gearRatio)/(Math.PI * diameter);
-    double bias = 0.7;
+    double bias = 1.0;
     double conversion = cpi * bias;
     private DcMotor middleMotor; // location 0 - eh
     private DcMotor frontLeftMotor; // location 0 - ch
@@ -96,10 +96,10 @@ public class newBotAuto extends OpMode {
     public void moveToPos(double inches, double speed) {
         int move = (int)(Math.round(inches * conversion));
 
-        frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() - move);
-        frontRightMotor.setTargetPosition(frontRightMotor.getCurrentPosition() - move);
-        backLeftMotor.setTargetPosition(backLeftMotor.getCurrentPosition() - move);
-        backRightMotor.setTargetPosition(backRightMotor.getCurrentPosition() - move);
+        frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() + move);
+        frontRightMotor.setTargetPosition(frontRightMotor.getCurrentPosition() + move);
+        backLeftMotor.setTargetPosition(backLeftMotor.getCurrentPosition() + move);
+        backRightMotor.setTargetPosition(backRightMotor.getCurrentPosition() + move);
 
         frontLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         frontRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -124,7 +124,7 @@ public class newBotAuto extends OpMode {
     public void strafeToPos(double inches, double speed) {
         int move = (int)(Math.round(inches * conversion));
 
-        middleMotor.setTargetPosition(middleMotor.getCurrentPosition() - move);
+        middleMotor.setTargetPosition(middleMotor.getCurrentPosition() + move);
 
         middleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
