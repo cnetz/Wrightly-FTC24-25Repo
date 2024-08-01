@@ -15,8 +15,10 @@ public class newBotAuto extends OpMode {
     double cpr = 537.7;
     double gearRatio = 1;
     double diameter = 3.77;
+
+    double slideDiameter = 1.5;
     double cpi = (cpr * gearRatio)/(Math.PI * diameter);
-    double cpiSlide = (cpr * gearRatio)/(Math.PI);
+    double cpiSlide = (cpr * gearRatio)/(Math.PI * slideDiameter);
     double bias = 1.0;
     double conversion = cpi * bias;
     private DcMotor middleMotor; // location 0 - eh
@@ -74,7 +76,7 @@ public class newBotAuto extends OpMode {
     @Override
     public void start() {
         newTimer.reset();
-        moveSlide(4,0.25);
+        moveSlide(10,0.25);
 
     }
 
