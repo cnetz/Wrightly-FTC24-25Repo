@@ -76,7 +76,7 @@ public class newBotAuto extends OpMode {
     @Override
     public void start() {
         newTimer.reset();
-        moveSlide(10,0.25);
+        moveSlide(35,0.25);
 
     }
 
