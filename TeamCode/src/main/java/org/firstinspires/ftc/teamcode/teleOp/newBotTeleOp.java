@@ -176,6 +176,7 @@ public class newBotTeleOp extends LinearOpMode {
             telemetry.addData("time", newTimer.seconds());
             telemetry.addData("slide", slide);
             telemetry.addData("jointMotorpos", jointMotor.getCurrentPosition());
+            telemetry.addData("jointMotor",joint);
             telemetry.update();
 
         }
