@@ -71,8 +71,6 @@ public class newBotTeleOp extends LinearOpMode {
 
         waitForStart();
 
-        jointMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
         newTimer.reset();
 
         claw.setPosition(0.3);
