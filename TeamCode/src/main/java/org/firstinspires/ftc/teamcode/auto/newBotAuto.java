@@ -77,6 +77,7 @@ public class newBotAuto extends OpMode {
     public void start() {
         newTimer.reset();
         moveSlide(35,0.25);
+        moveJoint(3,0.25);
 
     }
 
@@ -209,9 +210,18 @@ public class newBotAuto extends OpMode {
 
 
     }
-    public void test(double pos){
-        slideMotor.setTargetPosition((int) pos);
-        slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        slideMotor.setPower(0.25);
+    public void moveJoint(double inches, double speed) {
+        int move = (int) (Math.round(inches * cpiSlide));
+        jointMotor.setTargetPosition(move);
+
+        jointMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        jointMotor.setPower(speed);
     }
+
+
+
+
+
+
 }
