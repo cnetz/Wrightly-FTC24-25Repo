@@ -141,9 +141,9 @@ public class newBotAuto extends OpMode {
 
     public void moveToPos(double inches, double speed) {
         exit = false;
-        int move = (int)(Math.round(inches * conversion));
+        int move = (int)(Math.round(inches * conversion)); // converts inches to cpr for driving forward and back
 
-        frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() + move);
+        frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() + move);//sets position to go to
         frontRightMotor.setTargetPosition(frontRightMotor.getCurrentPosition() + move);
         backLeftMotor.setTargetPosition(backLeftMotor.getCurrentPosition() + move);
         backRightMotor.setTargetPosition(backRightMotor.getCurrentPosition() + move);

@@ -60,6 +60,7 @@ public class newBotTeleOp extends LinearOpMode {
         double changeSpeed = 1;
         double middleDefaultPower = 1.25;
         double slide = 0;
+        double joint = 0;
 
         boolean servoFirstPos = true;
         boolean servoMiddlePos = false;
@@ -108,6 +109,15 @@ public class newBotTeleOp extends LinearOpMode {
             }
 
             slideMotor.setPower(slide);
+
+            if (gamepad1.right_trigger > 0){
+                joint = gamepad1.right_trigger * 4;
+            } else if (gamepad1.left_trigger > 0){
+                joint = -gamepad1.left_trigger / 1.5;
+            } else {
+                joint = 0;
+            }
+            jointMotor.setPower(joint);
 
             boolean gamepad1A_pressed = gamepad1.a;
             boolean gamepad1B_pressed = gamepad1.b;
