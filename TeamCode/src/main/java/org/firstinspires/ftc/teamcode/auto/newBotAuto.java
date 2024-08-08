@@ -88,6 +88,12 @@ public class newBotAuto extends OpMode {
     }
 
     public void init_loop() {
+        if (gamepad1.y) {
+            telemetry.addData("Yaw", "Resetting\n");
+            imu.resetYaw();
+        } else {
+            telemetry.addData("Yaw", "Press Y (triangle) on Gamepad to reset\n");
+        }
         updateColor();
         updateTelemetry();
     }
