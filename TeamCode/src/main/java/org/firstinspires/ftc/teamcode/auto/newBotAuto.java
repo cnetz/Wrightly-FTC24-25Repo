@@ -2,13 +2,19 @@ package org.firstinspires.ftc.teamcode.auto;
 
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @Autonomous
 public class newBotAuto extends OpMode {
@@ -35,6 +41,7 @@ public class newBotAuto extends OpMode {
     private RevBlinkinLedDriver led;
     private RevBlinkinLedDriver.BlinkinPattern pattern;
     private RevColorSensorV3 colorSensor;
+    IMU imu;
     private boolean fiveSeconds = false;
     private boolean exit = false;
     double greenColor = 0;
@@ -54,6 +61,7 @@ public class newBotAuto extends OpMode {
         claw = hardwareMap.get(Servo.class,"claw");
         led = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
         colorSensor = hardwareMap.get(RevColorSensorV3.class,"colorSensor");
+        imu = hardwareMap.get(IMU.class,"imu");
 
         green0 = hardwareMap.get(DigitalChannel.class, "green0");
         red0 = hardwareMap.get(DigitalChannel.class, "red0");
@@ -68,6 +76,15 @@ public class newBotAuto extends OpMode {
         colorSensor.enableLed(true);
         slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         jointMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.FORWARD;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
+
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+
+        // Now initialize the IMU with this mounting orientation
+        // Note: if you choose two conflicting directions, this initialization will cause a code exception.
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
     }
 
     public void init_loop() {
@@ -124,6 +141,9 @@ public class newBotAuto extends OpMode {
     }
 
     public void updateTelemetry(){
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+
+        telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
         telemetry.addData("time", newTimer.seconds());
         telemetry.addData("blueColor", blueColor);
         telemetry.addData("alphaColor", alphaColor);
