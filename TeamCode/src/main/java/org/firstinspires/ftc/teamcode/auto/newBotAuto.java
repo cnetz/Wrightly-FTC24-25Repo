@@ -63,9 +63,11 @@ public class newBotAuto extends OpMode {
 
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        jointMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         colorSensor.enableLed(true);
         slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        jointMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     public void init_loop() {
@@ -77,8 +79,7 @@ public class newBotAuto extends OpMode {
     public void start() {
         newTimer.reset();
         moveSlide(35,0.25);
-        moveJoint(3,0.25);
-
+        moveJoint(10,1);
     }
 
     @Override
@@ -208,10 +209,9 @@ public class newBotAuto extends OpMode {
 
         slideMotor.setPower(speed);
 
-
     }
     public void moveJoint(double inches, double speed) {
-        int move = (int) (Math.round(inches * cpiSlide));
+        int move = (int) (Math.round(inches * cpiSlide * 3));
         jointMotor.setTargetPosition(move);
 
         jointMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
