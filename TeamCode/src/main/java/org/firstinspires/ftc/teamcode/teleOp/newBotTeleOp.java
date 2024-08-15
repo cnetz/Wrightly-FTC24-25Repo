@@ -54,12 +54,14 @@ public class newBotTeleOp extends LinearOpMode {
 
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        jointMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         //Reverse the other motors and sex X to not negative
 
         float defaultPower = 2;
         double changeSpeed = 1;
         double middleDefaultPower = 1.25;
         double slide = 0;
+        double joint = 0;
 
         boolean servoFirstPos = true;
         boolean servoMiddlePos = false;
@@ -70,11 +72,9 @@ public class newBotTeleOp extends LinearOpMode {
 
         waitForStart();
 
-        jointMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
         newTimer.reset();
 
-        claw.setPosition(0.3);
+        claw.setPosition(0.3);//claw = intake
 
         ButtonHandler buttonHandler = new ButtonHandler();
 
@@ -82,22 +82,22 @@ public class newBotTeleOp extends LinearOpMode {
 
         while(opModeIsActive()) {
 
-            double y = -gamepad1.left_stick_y;
-            double x = gamepad1.left_stick_x;
-            double rx = -gamepad1.right_stick_x;
+            double y = -gamepad1.left_stick_y;// set y to gamepad 1 left stick y
+            double x = gamepad1.left_stick_x;// set x to gamepad 1 left stick x
+            double rx = -gamepad1.right_stick_x;// sets rotating to gamepad 1 right stick
 
-            double denominator = Math.max(Math.abs(y) + Math.abs(x), 1);
-            double middleMotorPower = ((rx)) / middleDefaultPower;
-            double frontLeftMotorPower = ((y + x) / denominator) / defaultPower;
-            double backLeftMotorPower = ((y + x) / denominator) / defaultPower;
-            double frontRightMotorPower = ((y - x) / denominator) / defaultPower;
-            double backRightMotorPower = ((y - x) / denominator) / defaultPower;
+            double denominator = Math.max(Math.abs(y) + Math.abs(x), 1);//maxumum x+y =1
+            double middleMotorPower = ((rx)) / middleDefaultPower;// sets middle motor power to rx / default
+            double frontLeftMotorPower = ((y + x) / denominator) / defaultPower;// front left motor power = y+x/den/defoult
+            double backLeftMotorPower = ((y + x) / denominator) / defaultPower;// back left motor power = y+x/den/defoult
+            double frontRightMotorPower = ((y - x) / denominator) / defaultPower;// front right  motor power = y-x/den/defoult
+            double backRightMotorPower = ((y - x) / denominator) / defaultPower;// back right motor power = y-x/den/defoult
 
-            middleMotor.setPower(middleMotorPower / changeSpeed);
-            frontLeftMotor.setPower(frontLeftMotorPower / changeSpeed);
-            frontRightMotor.setPower(frontRightMotorPower / changeSpeed);
-            backRightMotor.setPower(backRightMotorPower / changeSpeed);
-            backLeftMotor.setPower(backLeftMotorPower / changeSpeed);
+            middleMotor.setPower(middleMotorPower / changeSpeed);//for middle motor it sets power/change speed
+            frontLeftMotor.setPower(frontLeftMotorPower / changeSpeed);//for front left motor itsets power/change speed
+            frontRightMotor.setPower(frontRightMotorPower / changeSpeed);//for front right  motor it sets power/change speed
+            backRightMotor.setPower(backRightMotorPower / changeSpeed);//back right motor it sets power/change speed
+            backLeftMotor.setPower(backLeftMotorPower / changeSpeed);//for back left  motor it  sets power/change speed
 
             if (gamepad2.right_trigger > 0){
                 slide = gamepad2.right_trigger * 4;
@@ -108,6 +108,15 @@ public class newBotTeleOp extends LinearOpMode {
             }
 
             slideMotor.setPower(slide);
+
+            if (gamepad1.right_trigger > 0){
+                joint = gamepad1.right_trigger * 4;
+            } else if (gamepad1.left_trigger > 0){
+                joint = -gamepad1.left_trigger / 1.5;
+            } else {
+                joint = 0;
+            }
+            jointMotor.setPower(joint);
 
             boolean gamepad1A_pressed = gamepad1.a;
             boolean gamepad1B_pressed = gamepad1.b;
@@ -162,10 +171,11 @@ public class newBotTeleOp extends LinearOpMode {
 
             //led.setPattern(pattern);
 
-            telemetry.addData("X Value", x);
-            telemetry.addData("time", newTimer.seconds());
+            telemetry.addData("X Value", x);// lets us know the x value
+            telemetry.addData("time", newTimer.seconds());// tells us the time from when we press start
             telemetry.addData("slide", slide);
             telemetry.addData("jointMotorpos", jointMotor.getCurrentPosition());
+            telemetry.addData("jointMotor",joint);
             telemetry.update();
 
         }
