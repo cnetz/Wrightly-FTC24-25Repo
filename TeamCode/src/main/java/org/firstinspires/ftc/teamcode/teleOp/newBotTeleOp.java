@@ -55,7 +55,7 @@ public class newBotTeleOp extends LinearOpMode {
 
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        jointMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         claw.setDirection(Servo.Direction.REVERSE);
         //Reverse the other motors and sex X to not negative
 
@@ -101,24 +101,8 @@ public class newBotTeleOp extends LinearOpMode {
             backRightMotor.setPower(backRightMotorPower / changeSpeed);//back right motor it sets power/change speed
             backLeftMotor.setPower(backLeftMotorPower / changeSpeed);//for back left  motor it  sets power/change speed
 
-            if (gamepad2.right_trigger > 0){
-                slide = gamepad2.right_trigger * 4;
-            } else if (gamepad2.left_trigger > 0){
-                slide = -gamepad2.left_trigger / 1.5;
-            } else {
-                slide = 0;
-            }
-
-            slideMotor.setPower(slide);
-
-            if (gamepad1.right_trigger > 0){
-                joint = gamepad1.right_trigger * 4;
-            } else if (gamepad1.left_trigger > 0){
-                joint = -gamepad1.left_trigger / 4;
-            } else {
-                joint = 0;
-            }
-            jointMotor.setPower(joint);
+            slideMotor.setPower(gamepad2.left_stick_y);
+            jointMotor.setPower(gamepad2.right_stick_y);
 
             boolean gamepad1A_pressed = gamepad1.a;
             boolean gamepad1B_pressed = gamepad1.b;
