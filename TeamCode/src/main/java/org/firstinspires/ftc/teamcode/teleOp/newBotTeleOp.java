@@ -51,10 +51,12 @@ public class newBotTeleOp extends LinearOpMode {
         frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         jointMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        claw.setDirection(Servo.Direction.REVERSE);
         //Reverse the other motors and sex X to not negative
 
         float defaultPower = 2;
@@ -112,7 +114,7 @@ public class newBotTeleOp extends LinearOpMode {
             if (gamepad1.right_trigger > 0){
                 joint = gamepad1.right_trigger * 4;
             } else if (gamepad1.left_trigger > 0){
-                joint = -gamepad1.left_trigger / 1.5;
+                joint = -gamepad1.left_trigger / 4;
             } else {
                 joint = 0;
             }
