@@ -101,8 +101,10 @@ public class newBotAuto extends OpMode {
     @Override
     public void start() {
         newTimer.reset();
-        moveSlide(35,0.25);
-        moveJoint(10,1);
+        moveToPos(12, 0.2);
+        strafeToPos(12, 0.2);
+        strafeToPos(-12, 0.2);
+        moveToPos(-12, 0.2);
     }
 
     @Override
