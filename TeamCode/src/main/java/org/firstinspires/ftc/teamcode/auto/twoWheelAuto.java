@@ -22,6 +22,8 @@ public class twoWheelAuto extends OpMode {
     double cpiSlide = (cpr * gearRatio)/(Math.PI * slideDiameter);
     double bias = 1.0;
     double conversion = cpi * bias;
+    double robotWidth = 12;
+    double turnCF = Math.PI * robotWidth;
     private DcMotor rightMotor; // location 2
     private DcMotor leftMotor; // location 1
     private DcMotor jointMotor; // location 0
@@ -70,7 +72,8 @@ public class twoWheelAuto extends OpMode {
     @Override
     public void start() {
         newTimer.reset();
-        moveToPos(12, 0.2);
+        //moveToPos(12, 0.2);
+        turnDegrees(90, 0.2);
     }
 
     @Override
@@ -162,7 +165,30 @@ public class twoWheelAuto extends OpMode {
 
         jointMotor.setPower(speed);
     }
+    public void turnDegrees(double degrees, double speed) {
+        double turnDistance = (degrees / 360) * turnCF;
+        double targetCounts = conversion * turnDistance;
+        leftMotor.setTargetPosition((int) (leftMotor.getCurrentPosition() + targetCounts));
+        rightMotor.setTargetPosition((int) (rightMotor.getCurrentPosition() + targetCounts));
 
+        leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        leftMotor.setPower(speed);
+        rightMotor.setPower(speed);
+
+        while(leftMotor.isBusy() && rightMotor.isBusy()){
+            if(exit) {
+                leftMotor.setPower(0);
+                rightMotor.setPower(0);
+                return;
+            }
+        }
+
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
+
+    }
 
 
 
