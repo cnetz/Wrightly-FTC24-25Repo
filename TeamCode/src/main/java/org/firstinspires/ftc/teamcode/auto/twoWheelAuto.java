@@ -169,7 +169,7 @@ public class twoWheelAuto extends OpMode {
         double turnDistance = (degrees / 360) * turnCF;
         double targetCounts = conversion * turnDistance;
         leftMotor.setTargetPosition((int) (leftMotor.getCurrentPosition() + targetCounts));
-        rightMotor.setTargetPosition((int) (rightMotor.getCurrentPosition() + targetCounts));
+        rightMotor.setTargetPosition((int) (rightMotor.getCurrentPosition() - targetCounts));
 
         leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
