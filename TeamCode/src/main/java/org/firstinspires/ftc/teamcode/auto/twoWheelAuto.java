@@ -22,7 +22,7 @@ public class twoWheelAuto extends OpMode {
     double cpiSlide = (cpr * gearRatio)/(Math.PI * slideDiameter);
     double bias = 1.0;
     double conversion = cpi * bias;
-    double robotWidth = 12;
+    double robotWidth = 12.9;
     double turnCF = Math.PI * robotWidth;
     private DcMotor rightMotor; // location 2
     private DcMotor leftMotor; // location 1
@@ -73,7 +73,7 @@ public class twoWheelAuto extends OpMode {
     public void start() {
         newTimer.reset();
         //moveToPos(12, 0.2);
-        turnDegrees(90, 0.2);
+        turnDegrees(45, 0.1);
     }
 
     @Override

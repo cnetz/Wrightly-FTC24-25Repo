@@ -18,6 +18,8 @@ public class twoWheelDrive extends LinearOpMode {
     private DcMotor rightMotor; // location 2
     private DcMotor slideMotor; // location 3
     private Servo wristServo; // location 0
+    private Servo clawServo; // location 2
+
     private ElapsedTime newTimer = new ElapsedTime();
 
     @Override
@@ -28,6 +30,7 @@ public class twoWheelDrive extends LinearOpMode {
         jointMotor = hardwareMap.get(DcMotor.class, "jointMotor");
         slideMotor = hardwareMap.get(DcMotor.class, "slideMotor");
         wristServo = hardwareMap.get(Servo.class,"wristServo");
+        clawServo = hardwareMap.get(Servo.class,"clawServo");
 
         rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -43,6 +46,7 @@ public class twoWheelDrive extends LinearOpMode {
         double joint = 0;
         boolean changeSpeedPos = false;
         boolean wristPos = false;
+        boolean clawPos = false;
         waitForStart();
 
        // newTimer.reset();
@@ -66,10 +70,7 @@ public class twoWheelDrive extends LinearOpMode {
             slideMotor.setPower(gamepad2.left_stick_y);
             jointMotor.setPower(gamepad2.right_stick_y);
 
-            boolean gamepad1A_pressed = gamepad1.a;
-            boolean gamepad1B_pressed = gamepad1.b;
-
-            if (buttonHandler.isPressedOnceA(gamepad1A_pressed)) {
+            if (buttonHandler.isPressedOnceA_1(gamepad1.a)) {
                 if (changeSpeedPos){
                     changeSpeedPos = false;
                     changeSpeed = 1;
@@ -79,7 +80,7 @@ public class twoWheelDrive extends LinearOpMode {
                     changeSpeedPos = true;
                 }
             }
-            if (buttonHandler.isPressedOnceB(gamepad1B_pressed)) {
+            if (buttonHandler.isPressedOnceB_2(gamepad2.b)) {
                 if (wristPos){
                     wristServo.setPosition(0.65);
                     wristPos = false;
@@ -89,8 +90,15 @@ public class twoWheelDrive extends LinearOpMode {
                     wristServo.setPosition(0.2);
                 }
             }
-            if (buttonHandler.isPressedOnceB(gamepad1B_pressed)) {
-                telemetry.addData("B", gamepad1B_pressed);
+            if (buttonHandler.isPressedOnceX_2(gamepad2.x)) {
+                if (clawPos){
+                    clawServo.setPosition(0);
+                    clawPos = false;
+
+                } else {
+                    clawPos = true;
+                    clawServo.setPosition(0.25);
+                }
             }
 
             telemetry.addData("X Value", x);// lets us know the x value
