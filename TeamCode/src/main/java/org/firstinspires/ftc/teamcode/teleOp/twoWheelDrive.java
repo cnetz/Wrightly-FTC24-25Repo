@@ -90,7 +90,7 @@ public class twoWheelDrive extends LinearOpMode {
                     wristServo.setPosition(0.2);
                 }
             }
-            if (buttonHandler.isPressedOnceX_2(gamepad2.x)) {
+            if (buttonHandler.isPressedOnceA_2(gamepad2.a)) {
                 if (clawPos){
                     clawServo.setPosition(0);
                     clawPos = false;
