@@ -62,7 +62,7 @@ public class twoWheelDrive extends LinearOpMode {
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x), 1);//maxumum x+y =1
             double rightMotorPower = ((y - x) / denominator);
-            double leftMotorPower = ((y + x) / denominator);// front left motor power = y+x/den/defoult
+            double leftMotorPower = ((y + x) / denominator);// front left motor power = y+x/den
 
             rightMotor.setPower(rightMotorPower / changeSpeed);//back right motor it sets power/change speed
             leftMotor.setPower(leftMotorPower / changeSpeed);//for back left  motor it  sets power/change speed
