@@ -70,7 +70,7 @@ public class twoWheelDrive extends LinearOpMode {
             jointMotor.setPower(gamepad2.right_stick_y);
 
             if (buttonHandler.isPressedOnceA_1(gamepad1.a)) {
-                if (changeSpeedPos){
+                if (changeSpeedPos) {
                     changeSpeedPos = false;
                     changeSpeed = 1;
 
@@ -80,7 +80,7 @@ public class twoWheelDrive extends LinearOpMode {
                 }
             }
             if (buttonHandler.isPressedOnceB_2(gamepad2.b)) {
-                if (wristPos){
+                if (wristPos) {
                     wristServo.setPosition(0.1);
                     wristPos = false;
 
@@ -90,7 +90,7 @@ public class twoWheelDrive extends LinearOpMode {
                 }
             }
             if (buttonHandler.isPressedOnceA_2(gamepad2.a)) {
-                if (clawPos){
+                if (clawPos) {
                     clawServo.setPosition(0);
                     clawPos = false;
 
@@ -99,6 +99,9 @@ public class twoWheelDrive extends LinearOpMode {
                     clawServo.setPosition(0.35);
                 }
             }
+            if (buttonHandler.isPressedOnceX_1(gamepad2.x))
+
+                wristServo.setPosition(0.9);
 
             telemetry.addData("X Value", x);// lets us know the x value
             telemetry.addData("time", newTimer.seconds());// tells us the time from when we press start
