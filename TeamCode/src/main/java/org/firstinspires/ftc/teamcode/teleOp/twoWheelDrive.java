@@ -38,7 +38,6 @@ public class twoWheelDrive extends LinearOpMode {
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         //Reverse the other motors and sex X to not negative
 
         double changeSpeed = 1;
@@ -82,12 +81,12 @@ public class twoWheelDrive extends LinearOpMode {
             }
             if (buttonHandler.isPressedOnceB_2(gamepad2.b)) {
                 if (wristPos){
-                    wristServo.setPosition(0.65);
+                    wristServo.setPosition(0.1);
                     wristPos = false;
 
                 } else {
                     wristPos = true;
-                    wristServo.setPosition(0.2);
+                    wristServo.setPosition(0.5);
                 }
             }
             if (buttonHandler.isPressedOnceA_2(gamepad2.a)) {
@@ -97,7 +96,7 @@ public class twoWheelDrive extends LinearOpMode {
 
                 } else {
                     clawPos = true;
-                    clawServo.setPosition(0.25);
+                    clawServo.setPosition(0.35);
                 }
             }
 
@@ -106,6 +105,7 @@ public class twoWheelDrive extends LinearOpMode {
             telemetry.addData("slide", slide);
             telemetry.addData("jointMotorpos", jointMotor.getCurrentPosition());
             telemetry.addData("jointMotor",joint);
+            telemetry.addData("wristServo",wristPos);
             telemetry.update();
 
         }
