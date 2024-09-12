@@ -86,22 +86,25 @@ public class twoWheelDrive extends LinearOpMode {
 
                 } else {
                     wristPos = true;
-                    wristServo.setPosition(0.5);
+                    wristServo.setPosition(0.45);
                 }
             }
             if (buttonHandler.isPressedOnceA_2(gamepad2.a)) {
                 if (clawPos) {
-                    clawServo.setPosition(0);
+                    clawServo.setPosition(.5);
                     clawPos = false;
 
                 } else {
                     clawPos = true;
-                    clawServo.setPosition(0.35);
+                    clawServo.setPosition(0.75);
                 }
             }
             if (buttonHandler.isPressedOnceX_1(gamepad2.x))
 
                 wristServo.setPosition(0.9);
+            if (buttonHandler.isPressedOnceY_1(gamepad2.y))
+
+                clawServo.setPosition(0.35);
 
             telemetry.addData("X Value", x);// lets us know the x value
             telemetry.addData("time", newTimer.seconds());// tells us the time from when we press start
