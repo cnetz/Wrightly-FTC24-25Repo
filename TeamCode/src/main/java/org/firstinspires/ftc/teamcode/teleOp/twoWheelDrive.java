@@ -111,7 +111,7 @@ public class twoWheelDrive extends LinearOpMode {
             telemetry.addData("slide", slide);
             telemetry.addData("jointMotorpos", jointMotor.getCurrentPosition());
             telemetry.addData("jointMotor",joint);
-            telemetry.addData("wristServo",wristPos);
+            //telemetry.addData("wristServo",wristPos);
             telemetry.update();
             //hello world
         }
