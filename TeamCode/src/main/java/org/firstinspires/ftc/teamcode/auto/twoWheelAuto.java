@@ -73,7 +73,7 @@ public class twoWheelAuto extends OpMode {
     public void start() {
         newTimer.reset();
         //moveToPos(12, 0.2);
-        turnDegrees(45, 0.1);
+        moveSlide(20, 0.2);
     }
 
     @Override
@@ -150,7 +150,7 @@ public class twoWheelAuto extends OpMode {
     }
     public void moveSlide(double inches, double speed){
         int move = (int)(Math.round(inches * cpiSlide));
-        slideMotor.setTargetPosition(move);
+        slideMotor.setTargetPosition(slideMotor.getCurrentPosition() + move);
 
         slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
@@ -189,9 +189,4 @@ public class twoWheelAuto extends OpMode {
         rightMotor.setPower(0);
 
     }
-
-
-
-
-
 }

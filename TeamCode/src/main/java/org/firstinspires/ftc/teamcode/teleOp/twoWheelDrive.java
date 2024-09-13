@@ -19,8 +19,14 @@ public class twoWheelDrive extends LinearOpMode {
     private DcMotor slideMotor; // location 3
     private Servo wristServo; // location 0
     private Servo clawServo; // location 2
-
     private ElapsedTime newTimer = new ElapsedTime();
+    private enum SlideState {
+        COMPLETED,
+        IDLE,
+        MANUAL,
+        MOVING
+    }
+    private SlideState currentSlideState = SlideState.IDLE;
 
     @Override
     public void runOpMode()  {
@@ -38,17 +44,23 @@ public class twoWheelDrive extends LinearOpMode {
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //Reverse the other motors and sex X to not negative
 
-        double changeSpeed = 0.5;
-        double slide = 0;
-        double joint = 0;
+        double cpr = 537.7;
+        double gearRatio = 1;
+        double slideDiameter = 1.5;
+        double cpiSlide = (cpr * gearRatio)/(Math.PI * slideDiameter);
+
+        double changeSpeed = 1;
         boolean changeSpeedPos = false;
         boolean wristPos = false;
         boolean clawPos = false;
+
+
         waitForStart();
 
-       // newTimer.reset();
+        newTimer.reset();
 
         ButtonHandler buttonHandler = new ButtonHandler();
 
@@ -63,25 +75,69 @@ public class twoWheelDrive extends LinearOpMode {
             double rightMotorPower = ((y - x) / denominator);
             double leftMotorPower = ((y + x) / denominator);// front left motor power = y+x/den
 
-            rightMotor.setPower(rightMotorPower / changeSpeed);//back right motor it sets power/change speed
-            leftMotor.setPower(leftMotorPower / changeSpeed);//for back left  motor it  sets power/change speed
+            rightMotor.setPower(rightMotorPower * changeSpeed);//back right motor it sets power/change speed
+            leftMotor.setPower(leftMotorPower * changeSpeed);//for back left  motor it  sets power/change speed
 
-            slideMotor.setPower(gamepad2.left_stick_y);
+            //slideMotor.setPower(gamepad2.left_stick_y);
             jointMotor.setPower(gamepad2.right_stick_y);
+
+            switch (currentSlideState) {
+                case IDLE:
+                    if(gamepad2.left_stick_y != 0){
+                        currentSlideState = SlideState.MANUAL;
+                    } else if(gamepad2.dpad_down) {
+                        int move = (int)(Math.round(-20 * cpiSlide));
+                        slideMotor.setTargetPosition(slideMotor.getCurrentPosition() + move);
+
+                        slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                        slideMotor.setPower(0.2);
+
+                        currentSlideState = SlideState.MOVING;
+                    }
+                    break;
+
+                case MOVING:
+                    // Check if the slide has reached the target
+                    if (!slideMotor.isBusy()) {
+                        // If it's done moving, transition to COMPLETED state
+                        currentSlideState = SlideState.COMPLETED;
+                    }
+                    break;
+
+                case COMPLETED:
+                    // Stop the motor and set back to RUN_USING_ENCODER for manual control
+                    slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    slideMotor.setPower(0);  // Stop the motor
+
+                    // Now transition back to IDLE for future movement
+                    currentSlideState = SlideState.IDLE;
+                    break;
+
+                case MANUAL:
+                    slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    slideMotor.setPower(gamepad2.left_stick_y);
+                    // If no manual control is happening, return to IDLE
+                    if (Math.abs(gamepad2.left_stick_y) == 0) {
+                        currentSlideState = SlideState.IDLE;
+                    }
+                    break;
+            }
+
 
             if (buttonHandler.isPressedOnceA_1(gamepad1.a)) {
                 if (changeSpeedPos) {
                     changeSpeedPos = false;
-                    changeSpeed = 1;
+                    changeSpeed = 1; //speed is 1
 
-                } else {
+                } else { //speed is halved
                     changeSpeed = 0.5;
                     changeSpeedPos = true;
                 }
             }
             if (buttonHandler.isPressedOnceB_2(gamepad2.b)) {
                 if (wristPos) {
-                    wristServo.setPosition(0.1);
+                    wristServo.setPosition(0.9);
                     wristPos = false;
 
                 } else {
@@ -99,22 +155,21 @@ public class twoWheelDrive extends LinearOpMode {
                     clawServo.setPosition(0.75);
                 }
             }
-            if (buttonHandler.isPressedOnceX_1(gamepad2.x))
+            if (buttonHandler.isPressedOnceX_2(gamepad2.x)) {
 
-                wristServo.setPosition(0.9);
-            if (buttonHandler.isPressedOnceY_1(gamepad2.y))
+            }
+            if (buttonHandler.isPressedOnceY_2(gamepad2.y)) {
 
                 clawServo.setPosition(0.35);
+            }
 
-            telemetry.addData("X Value", x);// lets us know the x value
+
+            telemetry.addData("Slide State", currentSlideState);
             telemetry.addData("time", newTimer.seconds());// tells us the time from when we press start
-            telemetry.addData("slide", slide);
-            telemetry.addData("jointMotorpos", jointMotor.getCurrentPosition());
-            telemetry.addData("jointMotor",joint);
-            telemetry.addData("wristServo",wristPos);
+            telemetry.addData("jointMotorPos", jointMotor.getCurrentPosition());
+            telemetry.addData("slideMotorPos", slideMotor.getCurrentPosition());
+            telemetry.addData("wristServo", wristServo.getPosition());
             telemetry.update();
-            //hello world
         }
-
     }
 }
