@@ -38,9 +38,10 @@ public class twoWheelDrive extends LinearOpMode {
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         //Reverse the other motors and sex X to not negative
 
-        double changeSpeed = 1;
+        double changeSpeed = .5;
         double slide = 0;
         double joint = 0;
         boolean changeSpeedPos = false;
@@ -70,48 +71,41 @@ public class twoWheelDrive extends LinearOpMode {
             jointMotor.setPower(gamepad2.right_stick_y);
 
             if (buttonHandler.isPressedOnceA_1(gamepad1.a)) {
-                if (changeSpeedPos) {
+                if (changeSpeedPos){
                     changeSpeedPos = false;
-                    changeSpeed = 1;
+                    changeSpeed = .5;
 
                 } else {
-                    changeSpeed = 2;
+                    changeSpeed = 1;
                     changeSpeedPos = true;
                 }
             }
             if (buttonHandler.isPressedOnceB_2(gamepad2.b)) {
-                if (wristPos) {
-                    wristServo.setPosition(0.1);
+                if (wristPos){
+                    wristServo.setPosition(0.65);
                     wristPos = false;
 
                 } else {
                     wristPos = true;
-                    wristServo.setPosition(0.45);
+                    wristServo.setPosition(0.2);
                 }
             }
-            if (buttonHandler.isPressedOnceA_2(gamepad2.a)) {
-                if (clawPos) {
-                    clawServo.setPosition(.5);
+            if (buttonHandler.isPressedOnceX_2(gamepad2.x)) {
+                if (clawPos){
+                    clawServo.setPosition(0);
                     clawPos = false;
 
                 } else {
                     clawPos = true;
-                    clawServo.setPosition(0.75);
+                    clawServo.setPosition(0.25);
                 }
             }
-            if (buttonHandler.isPressedOnceX_1(gamepad2.x))
-
-                wristServo.setPosition(0.9);
-            if (buttonHandler.isPressedOnceY_1(gamepad2.y))
-
-                clawServo.setPosition(0.35);
 
             telemetry.addData("X Value", x);// lets us know the x value
             telemetry.addData("time", newTimer.seconds());// tells us the time from when we press start
             telemetry.addData("slide", slide);
             telemetry.addData("jointMotorpos", jointMotor.getCurrentPosition());
             telemetry.addData("jointMotor",joint);
-            telemetry.addData("wristServo",wristPos);
             telemetry.update();
 
         }
