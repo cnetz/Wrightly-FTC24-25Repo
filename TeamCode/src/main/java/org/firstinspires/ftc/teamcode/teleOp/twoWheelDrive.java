@@ -40,7 +40,7 @@ public class twoWheelDrive extends LinearOpMode {
         leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         //Reverse the other motors and sex X to not negative
 
-        double changeSpeed = 1;
+        double changeSpeed = 0.5;
         double slide = 0;
         double joint = 0;
         boolean changeSpeedPos = false;
@@ -75,7 +75,7 @@ public class twoWheelDrive extends LinearOpMode {
                     changeSpeed = 1;
 
                 } else {
-                    changeSpeed = 2;
+                    changeSpeed = 0.5;
                     changeSpeedPos = true;
                 }
             }
@@ -111,7 +111,7 @@ public class twoWheelDrive extends LinearOpMode {
             telemetry.addData("slide", slide);
             telemetry.addData("jointMotorpos", jointMotor.getCurrentPosition());
             telemetry.addData("jointMotor",joint);
-            //telemetry.addData("wristServo",wristPos);
+            telemetry.addData("wristServo",wristPos);
             telemetry.update();
             //hello world
         }
