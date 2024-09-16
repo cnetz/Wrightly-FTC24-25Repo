@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.teleOp.twoWheelDrive;
 
 @Autonomous
 public class twoWheelAuto extends OpMode {
@@ -33,6 +34,18 @@ public class twoWheelAuto extends OpMode {
     IMU imu;
     private boolean fiveSeconds = false;
     private boolean exit = false;
+    private enum OrderState{
+        FIRST,SECOND,THIRD
+    }
+    private OrderState currentOrderState = OrderState.FIRST;
+    private enum SlideState{
+        IDLE,MOVING,COMPLETED
+    }
+    private SlideState currentSlideState = SlideState.IDLE;
+    private enum DriveState{
+        IDLE,MOVING,COMPLETED
+    }
+    private DriveState currentDriveState = DriveState.IDLE;
     @Override
     public void init() {
 
@@ -72,43 +85,64 @@ public class twoWheelAuto extends OpMode {
     @Override
     public void start() {
         newTimer.reset();
-        //moveToPos(12, 0.2);
-        moveSlide(20, 0.2);
     }
 
     @Override
     public void loop() {
         updateTelemetry();
-        /*
-        if(blueColor > 2750) {
-            strafeToPos(12, 0.2);
+       switch(currentOrderState){
+           case FIRST:
+               moveSlide(12,0.2);
+               moveToPos(20,0.2);
+               if (currentDriveState == DriveState.COMPLETED && currentSlideState == SlideState.COMPLETED ){
+                   currentOrderState = OrderState.SECOND;
+               }
+               break;
+           case SECOND:
+               break;
+           case THIRD:
+               break;
+       }
+        switch (currentSlideState) {
+            case IDLE:
+                break;
+
+            case MOVING:
+                // Check if the slide has reached the target
+                if (!slideMotor.isBusy()) {
+                    // If it's done moving, transition to COMPLETED state
+                    currentSlideState = SlideState.COMPLETED;
+                }
+                break;
+
+            case COMPLETED:
+                slideMotor.setPower(0);  // Stop the motor
+
+                // Now transition back to IDLE for future movement
+                break;
 
         }
+        //drive state
+        switch (currentDriveState) {
+            case IDLE:
+                break;
 
-        if(redColor > 1750) {
-            strafeToPos(-12, 0.2);
+            case MOVING:
+                // Check if the slide has reached the target
+                if (!leftMotor.isBusy() || !rightMotor.isBusy()) {
+                    // If it's done moving, transition to COMPLETED state
+                    currentDriveState = DriveState.COMPLETED;
+                }
+                break;
+
+            case COMPLETED:
+                leftMotor.setPower(0);  // Stop the motor
+                rightMotor.setPower(0);  // Stop the motor
+
+                // Now transition back to IDLE for future movement
+                break;
+
         }
-
-         */
-
-        /*
-        if(blueColor > 2000){
-            stopMoving();
-            strafeToPos(12, 0.2);
-        }
-
-        if (!fiveSeconds && newTimer.seconds() >= 5){
-           // moveToPos(36,0.2);
-            green0.setState(true);
-            red0.setState(false);
-            telemetry.addData("something","test");
-            telemetry.update();
-            fiveSeconds = true;
-        }else {
-            moveToPos(12, 0.2);
-            moveToPos(-12, 0.2);
-        }
-         */
     }
     @Override
     public void stop() {
@@ -136,17 +170,8 @@ public class twoWheelAuto extends OpMode {
 
         leftMotor.setPower(speed);
         rightMotor.setPower(speed);
+        currentDriveState = DriveState.MOVING;
 
-        while(leftMotor.isBusy() && rightMotor.isBusy()){
-            if(exit) {
-                leftMotor.setPower(0);
-                rightMotor.setPower(0);
-                return;
-            }
-        }
-
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
     }
     public void moveSlide(double inches, double speed){
         int move = (int)(Math.round(inches * cpiSlide));
@@ -155,6 +180,7 @@ public class twoWheelAuto extends OpMode {
         slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         slideMotor.setPower(speed);
+        currentSlideState = SlideState.MOVING;
 
     }
     public void moveJoint(double inches, double speed) {
