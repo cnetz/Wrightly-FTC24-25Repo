@@ -124,7 +124,6 @@ public class twoWheelDrive extends LinearOpMode {
                     break;
             }
 
-
             if (buttonHandler.isPressedOnceA_1(gamepad1.a)) {
                 if (changeSpeedPos) {
                     changeSpeedPos = false;

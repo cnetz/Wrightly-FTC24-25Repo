@@ -90,19 +90,36 @@ public class twoWheelAuto extends OpMode {
     @Override
     public void loop() {
         updateTelemetry();
-       switch(currentOrderState){
-           case FIRST:
-               moveSlide(12,0.2);
-               moveToPos(20,0.2);
-               if (currentDriveState == DriveState.COMPLETED && currentSlideState == SlideState.COMPLETED ){
-                   currentOrderState = OrderState.SECOND;
-               }
-               break;
-           case SECOND:
-               break;
-           case THIRD:
-               break;
-       }
+        switch(currentOrderState){
+            case FIRST:
+                if (currentDriveState == DriveState.IDLE && currentSlideState == SlideState.IDLE){
+                    moveSlide(12,0.2);
+                    moveToPos(20,0.2);
+                }
+                if (currentDriveState == DriveState.COMPLETED && currentSlideState == SlideState.COMPLETED){
+                    currentDriveState = DriveState.IDLE;
+                    currentSlideState = SlideState.IDLE;
+                    currentOrderState = OrderState.SECOND;
+                }
+                break;
+            case SECOND:
+                if (currentDriveState == DriveState.IDLE && currentSlideState == SlideState.IDLE){
+                    moveSlide(-12,0.2);
+                    moveToPos(-20,0.2);
+                }
+                if (currentDriveState == DriveState.COMPLETED && currentSlideState == SlideState.COMPLETED){
+                    currentDriveState = DriveState.IDLE;
+                    currentSlideState = SlideState.IDLE;
+                    currentOrderState = OrderState.THIRD;
+                }
+                break;
+            case THIRD:
+                break;
+        }
+
+
+
+
         switch (currentSlideState) {
             case IDLE:
                 break;
@@ -111,13 +128,13 @@ public class twoWheelAuto extends OpMode {
                 // Check if the slide has reached the target
                 if (!slideMotor.isBusy()) {
                     // If it's done moving, transition to COMPLETED state
+                    slideMotor.setPower(0);  // Stop the motor
                     currentSlideState = SlideState.COMPLETED;
+                    break;
                 }
                 break;
 
             case COMPLETED:
-                slideMotor.setPower(0);  // Stop the motor
-
                 // Now transition back to IDLE for future movement
                 break;
 
@@ -128,20 +145,21 @@ public class twoWheelAuto extends OpMode {
                 break;
 
             case MOVING:
+                // converts inches to cpr for driving forward and back
                 // Check if the slide has reached the target
-                if (!leftMotor.isBusy() || !rightMotor.isBusy()) {
+                if (!leftMotor.isBusy() && !rightMotor.isBusy()) {
                     // If it's done moving, transition to COMPLETED state
+                    leftMotor.setPower(0);  // Stop the motor
+                    rightMotor.setPower(0);  // Stop the motor
+
                     currentDriveState = DriveState.COMPLETED;
+                    break;
                 }
                 break;
 
             case COMPLETED:
-                leftMotor.setPower(0);  // Stop the motor
-                rightMotor.setPower(0);  // Stop the motor
-
                 // Now transition back to IDLE for future movement
                 break;
-
         }
     }
     @Override
@@ -155,12 +173,15 @@ public class twoWheelAuto extends OpMode {
         telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
         telemetry.addData("time", newTimer.seconds());
         telemetry.addData("Slide", slideMotor.getCurrentPosition());
+        telemetry.addData("DriveLeft", leftMotor.getCurrentPosition());
+        telemetry.addData("DriveRight", rightMotor.getCurrentPosition());
+        telemetry.addData("DriveState", currentDriveState);
+        telemetry.addData("SlideState", currentSlideState);
         telemetry.update();
     }
 
     public void moveToPos(double inches, double speed) {
-        exit = false;
-        int move = (int)(Math.round(inches * conversion)); // converts inches to cpr for driving forward and back
+        int move = (int)(Math.round(inches * conversion));
 
         leftMotor.setTargetPosition(leftMotor.getCurrentPosition() + move);
         rightMotor.setTargetPosition(rightMotor.getCurrentPosition() + move);
@@ -170,6 +191,7 @@ public class twoWheelAuto extends OpMode {
 
         leftMotor.setPower(speed);
         rightMotor.setPower(speed);
+
         currentDriveState = DriveState.MOVING;
 
     }
@@ -213,6 +235,5 @@ public class twoWheelAuto extends OpMode {
 
         leftMotor.setPower(0);
         rightMotor.setPower(0);
-
     }
 }
