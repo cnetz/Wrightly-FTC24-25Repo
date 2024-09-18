@@ -52,13 +52,14 @@ public class twoWheelDrive extends LinearOpMode {
         double slideDiameter = 1.5;
         double cpiSlide = (cpr * gearRatio)/(Math.PI * slideDiameter);
 
-        double changeSpeed = 1;
+        double changeSpeed = 0.65;
         boolean changeSpeedPos = false;
         boolean wristPos = false;
         boolean clawPos = false;
-
+        boolean wristPosX = false;
 
         waitForStart();
+        //wristServo.setPosition(0.45);
 
         newTimer.reset();
 
@@ -78,8 +79,14 @@ public class twoWheelDrive extends LinearOpMode {
             rightMotor.setPower(rightMotorPower * changeSpeed);//back right motor it sets power/change speed
             leftMotor.setPower(leftMotorPower * changeSpeed);//for back left  motor it  sets power/change speed
 
-            //slideMotor.setPower(gamepad2.left_stick_y);
-            jointMotor.setPower(gamepad2.right_stick_y);
+            //slideMotor.setPower(gamepad2.left_stick_y)
+            if (gamepad2.right_trigger >0){
+                jointMotor.setPower(gamepad2.right_trigger);
+            } else if(gamepad2.left_trigger >0) {
+                jointMotor.setPower(-gamepad2.left_trigger);
+            }else{
+                jointMotor.setPower(0);
+            }
 
             switch (currentSlideState) {
                 case IDLE:
@@ -127,26 +134,26 @@ public class twoWheelDrive extends LinearOpMode {
             if (buttonHandler.isPressedOnceA_1(gamepad1.a)) {
                 if (changeSpeedPos) {
                     changeSpeedPos = false;
-                    changeSpeed = 1; //speed is 1
+                    changeSpeed = 0.65; //speed is 1
 
                 } else { //speed is halved
-                    changeSpeed = 0.5;
+                    changeSpeed = 0.25 ;
                     changeSpeedPos = true;
                 }
             }
             if (buttonHandler.isPressedOnceB_2(gamepad2.b)) {
                 if (wristPos) {
-                    wristServo.setPosition(0.9);
+                    wristServo.setPosition(0.45);
                     wristPos = false;
 
                 } else {
                     wristPos = true;
-                    wristServo.setPosition(0.45);
+                    wristServo.setPosition(0.9);
                 }
             }
             if (buttonHandler.isPressedOnceA_2(gamepad2.a)) {
                 if (clawPos) {
-                    clawServo.setPosition(.5);
+                    clawServo.setPosition(.1);
                     clawPos = false;
 
                 } else {
@@ -155,11 +162,19 @@ public class twoWheelDrive extends LinearOpMode {
                 }
             }
             if (buttonHandler.isPressedOnceX_2(gamepad2.x)) {
+                if (wristPosX) {
+                    wristServo.setPosition(0.45);
+                    wristPosX = false;
 
+                } else {
+                    wristPosX = true;
+                    wristServo.setPosition(0.1);
+                }
             }
-            if (buttonHandler.isPressedOnceY_2(gamepad2.y)) {
-
-                clawServo.setPosition(0.35);
+            if (gamepad2.y) {
+                clawServo.setPosition(0.2);
+            }  else {
+                clawServo.setPosition(0.7);
             }
 
 
