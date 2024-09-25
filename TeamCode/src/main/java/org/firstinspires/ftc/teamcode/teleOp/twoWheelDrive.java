@@ -151,7 +151,7 @@ public class twoWheelDrive extends LinearOpMode {
 
                 } else {
                     wristPos = true;
-                    wristServo.setPosition(0.8);
+                    wristServo.setPosition(0.75);
                 }
             }
             if (buttonHandler.isPressedOnceA_2(gamepad2.a)) {
