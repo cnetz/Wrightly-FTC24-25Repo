@@ -186,7 +186,7 @@ public class twoWheelDrive extends LinearOpMode {
 
                 } else {
                     rbPos = true;
-                    basketServo.setPosition(0.25);
+                    basketServo.setPosition(0.3);
                 }
             }
 
