@@ -175,9 +175,9 @@ public class twoWheelDrive extends LinearOpMode {
                 }
             }
             if (gamepad2.y) {
-                clawServo.setPosition(0.2);
+                clawServo.setPosition(0.6);
             }  else {
-                clawServo.setPosition(0.8);
+                clawServo.setPosition(0.75);
             }
             if (buttonHandler.isPressedOnceRB_2(gamepad2.right_bumper)) {
                 if (rbPos) {
