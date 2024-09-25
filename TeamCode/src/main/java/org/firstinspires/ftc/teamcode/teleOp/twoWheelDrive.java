@@ -19,6 +19,7 @@ public class twoWheelDrive extends LinearOpMode {
     private DcMotor slideMotor; // location 3
     private Servo wristServo; // location 0
     private Servo clawServo; // location 2
+    private Servo basketServo; // location 4
     private ElapsedTime newTimer = new ElapsedTime();
     private enum SlideState {
         COMPLETED,
@@ -37,6 +38,7 @@ public class twoWheelDrive extends LinearOpMode {
         slideMotor = hardwareMap.get(DcMotor.class, "slideMotor");
         wristServo = hardwareMap.get(Servo.class,"wristServo");
         clawServo = hardwareMap.get(Servo.class,"clawServo");
+        basketServo = hardwareMap.get(Servo.class,"basketServo");
 
         rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -57,6 +59,7 @@ public class twoWheelDrive extends LinearOpMode {
         boolean wristPos = false;
         boolean clawPos = false;
         boolean wristPosX = false;
+        boolean rbPos = false;
 
         waitForStart();
         //wristServo.setPosition(0.45);
@@ -175,6 +178,16 @@ public class twoWheelDrive extends LinearOpMode {
                 clawServo.setPosition(0.2);
             }  else {
                 clawServo.setPosition(0.7);
+            }
+            if (buttonHandler.isPressedOnceRB_2(gamepad2.right_bumper)) {
+                if (rbPos) {
+                    basketServo.setPosition(0.45);
+                    rbPos = false;
+
+                } else {
+                    rbPos = true;
+                    basketServo.setPosition(0.1);
+                }
             }
 
 

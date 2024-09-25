@@ -13,8 +13,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 @TeleOp
 public class pidarm extends OpMode {
     private PIDController controller;
-    public static double p = 0,i = 0, d = 0;
-    public static double f = 0;
+    public static double p = 0.004,i = 0, d = 0.0002;
+    public static double f = 0.02;
     public static int target = 0;
     private final double ticksInDegree = 285 / 180;//1425
     private DcMotorEx jointMotor;
