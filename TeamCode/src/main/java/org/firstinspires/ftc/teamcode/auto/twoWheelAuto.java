@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.auto;
 
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -15,6 +16,12 @@ import org.firstinspires.ftc.teamcode.teleOp.twoWheelDrive;
 
 @Autonomous
 public class twoWheelAuto extends OpMode {
+    private PIDController controller;
+    double p = 0.004,i = 0, d = 0.0002;
+    double f = 0.02;
+    int armTarget = 0;
+    int armThreshold = 10;
+    private final double ticksInDegree = 285 / 180;//1425
     double cpr = 537.7;
     double gearRatio = 1;
     double diameter = 3.77;
@@ -46,8 +53,13 @@ public class twoWheelAuto extends OpMode {
         IDLE,MOVING,COMPLETED
     }
     private DriveState currentDriveState = DriveState.IDLE;
+    private enum armState{
+        IDLE, HOLDING,MOVING//same as completed
+    }
+    private armState currentArmState = armState.IDLE;
     @Override
     public void init() {
+        controller = new PIDController(p,i,d);
 
         rightMotor = hardwareMap.get(DcMotor.class, "rightMotor");
         leftMotor = hardwareMap.get(DcMotor.class, "leftMotor");
@@ -90,22 +102,30 @@ public class twoWheelAuto extends OpMode {
     @Override
     public void loop() {
         updateTelemetry();
+        armFSM();
         switch(currentOrderState){
             case FIRST:
-                if (currentDriveState == DriveState.IDLE && currentSlideState == SlideState.IDLE){
-                    moveSlide(12,0.2);
-                    moveToPos(20,0.2);
+                if (currentArmState == armState.IDLE){
+                    setTargetArm(1000);
                 }
+                if (currentArmState == armState.HOLDING){
+                    currentArmState = armState.IDLE;
+                    currentOrderState = OrderState.SECOND;
+                }
+                /*if (currentDriveState == DriveState.IDLE && currentSlideState == SlideState.IDLE){
+                //moveSlide(12,0.2);
+                // moveToPos(20,0.2);
+            }
                 if (currentDriveState == DriveState.COMPLETED && currentSlideState == SlideState.COMPLETED){
                     currentDriveState = DriveState.IDLE;
                     currentSlideState = SlideState.IDLE;
                     currentOrderState = OrderState.SECOND;
-                }
+                }*/
                 break;
             case SECOND:
                 if (currentDriveState == DriveState.IDLE && currentSlideState == SlideState.IDLE){
-                    moveSlide(-12,0.2);
-                    moveToPos(-20,0.2);
+                   // moveSlide(-12,0.2);
+                   // moveToPos(-20,0.2);
                 }
                 if (currentDriveState == DriveState.COMPLETED && currentSlideState == SlideState.COMPLETED){
                     currentDriveState = DriveState.IDLE;
@@ -116,9 +136,6 @@ public class twoWheelAuto extends OpMode {
             case THIRD:
                 break;
         }
-
-
-
 
         switch (currentSlideState) {
             case IDLE:
@@ -235,5 +252,35 @@ public class twoWheelAuto extends OpMode {
 
         leftMotor.setPower(0);
         rightMotor.setPower(0);
+    }
+    public void setTargetArm(int target){
+        armTarget = target;
+        currentArmState = currentArmState.MOVING;
+    }
+    public void moveArm(int target){
+        controller.setPID(p,i,d);
+        int jointPos = jointMotor.getCurrentPosition();
+        double pid = controller.calculate(jointPos,target);
+        double ff = Math.cos(Math.toRadians(target / ticksInDegree)) * f;
+        double power = pid + ff;
+        jointMotor.setPower(power);
+    }
+    public void armFSM(){
+        switch (currentArmState){
+            case IDLE:
+                moveArm(armTarget);
+                break;
+            case HOLDING:
+                moveArm(armTarget);
+                break;
+            case MOVING:
+                moveArm(armTarget);
+                double currentPos = jointMotor.getCurrentPosition();
+
+                if (Math.abs((armTarget - currentPos)) < armThreshold){
+                    currentArmState = currentArmState.HOLDING;
+                }
+
+        }
     }
 }
