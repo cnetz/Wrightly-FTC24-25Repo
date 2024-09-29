@@ -5,6 +5,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -18,10 +19,10 @@ import org.firstinspires.ftc.teamcode.teleOp.twoWheelDrive;
 public class twoWheelAuto extends OpMode {
     private PIDController controller;
     double p = 0.004,i = 0, d = 0.0002;
-    double f = 0.02;
+    double f = 0.03;
     int armTarget = 0;
     int armThreshold = 10;
-    private final double ticksInDegree = 285 / 180;//1425
+    double ticksInDegree = 285 / 180;//1425
     double cpr = 537.7;
     double gearRatio = 1;
     double diameter = 3.77;
@@ -34,9 +35,11 @@ public class twoWheelAuto extends OpMode {
     double turnCF = Math.PI * robotWidth;
     private DcMotor rightMotor; // location 2
     private DcMotor leftMotor; // location 1
-    private DcMotor jointMotor; // location 0
+    private DcMotorEx jointMotor; // location 0
     private DcMotor slideMotor; // location 3
     private Servo wristServo;
+    private Servo clawServo;
+    private Servo basketServo;
     private ElapsedTime newTimer = new ElapsedTime();
     IMU imu;
     private boolean fiveSeconds = false;
@@ -63,16 +66,18 @@ public class twoWheelAuto extends OpMode {
 
         rightMotor = hardwareMap.get(DcMotor.class, "rightMotor");
         leftMotor = hardwareMap.get(DcMotor.class, "leftMotor");
-        jointMotor = hardwareMap.get(DcMotor.class, "jointMotor");
+        jointMotor = hardwareMap.get(DcMotorEx.class, "jointMotor");
         slideMotor = hardwareMap.get(DcMotor.class, "slideMotor");
         wristServo = hardwareMap.get(Servo.class,"wristServo");
+        clawServo = hardwareMap.get(Servo.class,"clawServo");
+        basketServo = hardwareMap.get(Servo.class,"basketServo");
         imu = hardwareMap.get(IMU.class,"imu");
 
         leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        jointMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //jointMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
@@ -96,17 +101,18 @@ public class twoWheelAuto extends OpMode {
 
     @Override
     public void start() {
+        clawServo.setPosition(0.75);
         newTimer.reset();
     }
 
     @Override
     public void loop() {
         updateTelemetry();
-        armFSM();
         switch(currentOrderState){
             case FIRST:
                 if (currentArmState == armState.IDLE){
-                    setTargetArm(1000);
+                    setTargetArm(3000);
+                    wristServo.setPosition(0.55);
                 }
                 if (currentArmState == armState.HOLDING){
                     currentArmState = armState.IDLE;
@@ -137,47 +143,9 @@ public class twoWheelAuto extends OpMode {
                 break;
         }
 
-        switch (currentSlideState) {
-            case IDLE:
-                break;
-
-            case MOVING:
-                // Check if the slide has reached the target
-                if (!slideMotor.isBusy()) {
-                    // If it's done moving, transition to COMPLETED state
-                    slideMotor.setPower(0);  // Stop the motor
-                    currentSlideState = SlideState.COMPLETED;
-                    break;
-                }
-                break;
-
-            case COMPLETED:
-                // Now transition back to IDLE for future movement
-                break;
-
-        }
-        //drive state
-        switch (currentDriveState) {
-            case IDLE:
-                break;
-
-            case MOVING:
-                // converts inches to cpr for driving forward and back
-                // Check if the slide has reached the target
-                if (!leftMotor.isBusy() && !rightMotor.isBusy()) {
-                    // If it's done moving, transition to COMPLETED state
-                    leftMotor.setPower(0);  // Stop the motor
-                    rightMotor.setPower(0);  // Stop the motor
-
-                    currentDriveState = DriveState.COMPLETED;
-                    break;
-                }
-                break;
-
-            case COMPLETED:
-                // Now transition back to IDLE for future movement
-                break;
-        }
+        driveFSM();
+        armFSM();
+        slideFSM();
     }
     @Override
     public void stop() {
@@ -194,6 +162,10 @@ public class twoWheelAuto extends OpMode {
         telemetry.addData("DriveRight", rightMotor.getCurrentPosition());
         telemetry.addData("DriveState", currentDriveState);
         telemetry.addData("SlideState", currentSlideState);
+        telemetry.addData("ArmState", currentArmState);
+        telemetry.addData("armTarget", armTarget);
+        telemetry.addData("jointPos", jointMotor.getCurrentPosition());
+        telemetry.addData("jointPower", jointMotor.getPower());
         telemetry.update();
     }
 
@@ -255,7 +227,7 @@ public class twoWheelAuto extends OpMode {
     }
     public void setTargetArm(int target){
         armTarget = target;
-        currentArmState = currentArmState.MOVING;
+        currentArmState = armState.MOVING;
     }
     public void moveArm(int target){
         controller.setPID(p,i,d);
@@ -268,19 +240,82 @@ public class twoWheelAuto extends OpMode {
     public void armFSM(){
         switch (currentArmState){
             case IDLE:
-                moveArm(armTarget);
+                int currentPos1 = jointMotor.getCurrentPosition();
+                moveArm(currentPos1);
                 break;
             case HOLDING:
                 moveArm(armTarget);
                 break;
             case MOVING:
                 moveArm(armTarget);
-                double currentPos = jointMotor.getCurrentPosition();
+                double currentPos2 = jointMotor.getCurrentPosition();
 
-                if (Math.abs((armTarget - currentPos)) < armThreshold){
-                    currentArmState = currentArmState.HOLDING;
+                if (Math.abs((armTarget - currentPos2)) < armThreshold){
+                    currentArmState = armState.HOLDING;
                 }
 
         }
     }
+    public void slideFSM(){
+        switch (currentSlideState) {
+            case IDLE:
+                break;
+
+            case MOVING:
+                // Check if the slide has reached the target
+                if (!slideMotor.isBusy()) {
+                    // If it's done moving, transition to COMPLETED state
+                    slideMotor.setPower(0);  // Stop the motor
+                    currentSlideState = SlideState.COMPLETED;
+                    break;
+                }
+                break;
+
+            case COMPLETED:
+                // Now transition back to IDLE for future movement
+                break;
+
+        }
+
+    }
+    public void driveFSM(){
+        switch (currentDriveState) {
+            case IDLE:
+                break;
+
+            case MOVING:
+                // converts inches to cpr for driving forward and back
+                // Check if the slide has reached the target
+                if (!leftMotor.isBusy() && !rightMotor.isBusy()) {
+                    // If it's done moving, transition to COMPLETED state
+                    leftMotor.setPower(0);  // Stop the motor
+                    rightMotor.setPower(0);  // Stop the motor
+
+                    currentDriveState = DriveState.COMPLETED;
+                    break;
+                }
+                break;
+
+            case COMPLETED:
+                // Now transition back to IDLE for future movement
+                break;
+        }
+
+    }
+    //private double calculateSinusoidalSpeed(int currentDistance, int totalDistance)
+    //fractionTraveled = (double) currentDistance / totalDistance;
+    //speed = baseSpeed + (maxSpeed - baseSpeed) * Math.sin(Math.PI * fractionTraveled);
+    //return speed;
+
+    //private double applyAccelerationControl(double currentSpeed, double targetSpeed, double maxAcceleration)
+    // speedDifference = targetSpeed - currentSpeed
+    // if(speedDifference > maxAcceleration) {
+    // currentSpeed += maxAcceleration
+    // } else if (speedDifference < -maxAcceleration) {
+    // currentSpeed -= maxAcceleration
+    // } else {
+    // currentSpeed = targetSpeed;
+    // }
+    // return currentSpeed;
+
 }
