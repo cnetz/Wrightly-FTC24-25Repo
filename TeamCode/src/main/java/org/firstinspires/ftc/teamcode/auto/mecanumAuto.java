@@ -25,7 +25,7 @@ public class mecanumAuto extends OpMode {
     double ticksInDegree = 285 / 180;//1425
     double cpr = 537.7;
     double gearRatio = 1;
-    double diameter = 3.77;
+    double diameter = 4.1; //4.09449 in inches - mecanum
     double slideDiameter = 1.5;
     double cpi = (cpr * gearRatio)/(Math.PI * diameter);
     double cpiSlide = (cpr * gearRatio)/(Math.PI * slideDiameter);
@@ -62,6 +62,10 @@ public class mecanumAuto extends OpMode {
         IDLE, HOLDING,MOVING//same as completed
     }
     private armState currentArmState = armState.IDLE;
+    private enum StrafeState{
+        IDLE,MOVING,COMPLETED
+    }
+    private StrafeState currentStrafeState = StrafeState.IDLE;
     @Override
     public void init() {
         controller = new PIDController(p,i,d);
@@ -154,7 +158,7 @@ public class mecanumAuto extends OpMode {
             case THIRD:
                 break;
         }
-
+        strafeFSM();
         driveFSM();
         armFSM();
         slideFSM();
@@ -202,6 +206,27 @@ public class mecanumAuto extends OpMode {
         backRightMotor.setPower(speed);
 
         currentDriveState = DriveState.MOVING;
+
+    }
+    public void strafeToPos(double inches, double speed) {
+        int move = (int)(Math.round(inches * conversion));
+
+        frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() + move);
+        frontRightMotor.setTargetPosition(frontRightMotor.getCurrentPosition() - move);
+        backLeftMotor.setTargetPosition(backLeftMotor.getCurrentPosition() - move);
+        backRightMotor.setTargetPosition(backRightMotor.getCurrentPosition() + move);
+
+        frontLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        frontLeftMotor.setPower(speed);
+        frontRightMotor.setPower(speed);
+        backLeftMotor.setPower(speed);
+        backRightMotor.setPower(speed);
+
+        currentStrafeState = StrafeState.MOVING;
 
     }
     public void moveSlide(double inches, double speed){
@@ -300,6 +325,31 @@ public class mecanumAuto extends OpMode {
                 break;
         }
 
+    }
+    public void strafeFSM() {
+        switch (currentStrafeState) {
+            case IDLE:
+                break;
+
+            case MOVING:
+                // converts inches to cpr for driving forward and back
+                // Check if the slide has reached the target
+                if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
+                    // If it's done moving, transition to COMPLETED state
+                    frontLeftMotor.setPower(0);
+                    frontRightMotor.setPower(0);
+                    backLeftMotor.setPower(0);
+                    backRightMotor.setPower(0);
+
+                    currentStrafeState = StrafeState.COMPLETED;
+                    break;
+                }
+                break;
+
+            case COMPLETED:
+                // Now transition back to IDLE for future movement
+                break;
+        }
     }
     //private double calculateSinusoidalSpeed(int currentDistance, int totalDistance)
     //fractionTraveled = (double) currentDistance / totalDistance;
