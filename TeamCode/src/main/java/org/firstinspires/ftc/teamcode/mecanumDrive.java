@@ -209,8 +209,6 @@ public class mecanumDrive extends LinearOpMode {
                 break;
             case MOVING:
                 moveArm(armTarget);
-
-
         }
     }
     public void slideFSM(){

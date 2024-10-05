@@ -39,7 +39,5 @@ public class pidarm extends OpMode {
         telemetry.addData("pos", jointPos);
         telemetry.addData("target", target);
         telemetry.update();
-
     }
-
 }
