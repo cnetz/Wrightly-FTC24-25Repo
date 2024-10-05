@@ -70,15 +70,15 @@ public class mecanumAuto extends OpMode {
     public void init() {
         controller = new PIDController(p,i,d);
 
-        frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor");
-        backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor");
-        backLeftMotor = hardwareMap.get(DcMotor.class, "backLeftMotor");
-        frontLeftMotor = hardwareMap.get(DcMotor.class, "frontLeftMotor");
-        jointMotor = hardwareMap.get(DcMotorEx.class, "jointMotor");
-        slideMotor = hardwareMap.get(DcMotor.class, "slideMotor");
-        wristServo = hardwareMap.get(Servo.class,"wristServo");
-        clawServo = hardwareMap.get(Servo.class,"clawServo");
-        basketServo = hardwareMap.get(Servo.class,"basketServo");
+        frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor"); // EXP 2
+        backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor"); // EXP 3
+        backLeftMotor = hardwareMap.get(DcMotor.class, "backLeftMotor"); // EXP 0
+        frontLeftMotor = hardwareMap.get(DcMotor.class, "frontLeftMotor"); // EXP 1
+        jointMotor = hardwareMap.get(DcMotorEx.class, "jointMotor"); // CON - 3
+        slideMotor = hardwareMap.get(DcMotor.class, "slideMotor"); // CON - 0
+        wristServo = hardwareMap.get(Servo.class,"wristServo"); // CON - 0
+        clawServo = hardwareMap.get(Servo.class,"clawServo"); // EXP - 5
+        basketServo = hardwareMap.get(Servo.class,"basketServo"); // CON - 4
         imu = hardwareMap.get(IMU.class,"imu");
 
         frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -88,8 +88,8 @@ public class mecanumAuto extends OpMode {
         jointMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
