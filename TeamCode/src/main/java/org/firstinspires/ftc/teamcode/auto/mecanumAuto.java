@@ -66,6 +66,8 @@ public class mecanumAuto extends OpMode {
         IDLE,MOVING,COMPLETED
     }
     private StrafeState currentStrafeState = StrafeState.IDLE;
+    boolean isDriveIdle = isDriveState(currentDriveState, DriveState.IDLE);
+    boolean isDriveCompleted = isDriveState(currentDriveState, DriveState.COMPLETED);
     @Override
     public void init() {
         controller = new PIDController(p,i,d);
@@ -126,12 +128,14 @@ public class mecanumAuto extends OpMode {
         updateTelemetry();
         switch(currentOrderState){
             case FIRST:
-                if (currentArmState == armState.IDLE){
-                    setTargetArm(3000);
-                    wristServo.setPosition(0.55);
+                if (isDriveIdle){
+                    moveToPos(12,0.5);
+                    //setTargetArm(3000);
+                   // wristServo.setPosition(0.55);
                 }
-                if (currentArmState == armState.HOLDING){
-                    currentArmState = armState.IDLE;
+                if (isDriveCompleted){
+                    //currentArmState = armState.IDLE;
+                    currentDriveState = DriveState.IDLE;
                     currentOrderState = OrderState.SECOND;
                 }
                 /*if (currentDriveState == DriveState.IDLE && currentSlideState == SlideState.IDLE){
@@ -350,6 +354,30 @@ public class mecanumAuto extends OpMode {
                 // Now transition back to IDLE for future movement
                 break;
         }
+    }
+    private boolean isDriveState(DriveState currentState, DriveState... targetStates){
+        for (DriveState targetState : targetStates){
+            if (currentState == targetState){
+                return true;
+            }
+        }
+        return false;
+    }
+    private boolean isArmState(armState currentState, armState... targetStates){
+        for (armState targetState : targetStates){
+            if (currentState == targetState){
+                return true;
+            }
+        }
+        return false;
+    }
+    private boolean isSlideState(SlideState currentState, SlideState... targetStates){
+        for (SlideState targetState : targetStates){
+            if (currentState == targetState){
+                return true;
+            }
+        }
+        return false;
     }
     //private double calculateSinusoidalSpeed(int currentDistance, int totalDistance)
     //fractionTraveled = (double) currentDistance / totalDistance;
