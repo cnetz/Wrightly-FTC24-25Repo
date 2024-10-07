@@ -13,30 +13,30 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 @TeleOp
 public class pidarm extends OpMode {
     private PIDController controller;
-    public static double p = 0.004,i = 0, d = 0.0002;
-    public static double f = 0.1;
+    public static double p = 0.00,i = 0, d = 0.000;
+    public static double f = 0.0;
     public static int target = 0;
-    private final double ticksInDegree = 285 / 180;//1425
-    private DcMotorEx jointMotor;
+    private final double ticksInDegree = 358.466 / 180;//1425
+    private DcMotorEx slideMotor;
     @Override
     public void init() {
         controller = new PIDController(p,i,d);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        jointMotor = hardwareMap.get(DcMotorEx.class, "jointMotor");
+        slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
 
     }
 
     @Override
     public void loop() {
         controller.setPID(p,i,d);
-        int jointPos = jointMotor.getCurrentPosition();
-        double pid = controller.calculate(jointPos,target);
+        int slidePos = slideMotor.getCurrentPosition();
+        double pid = controller.calculate(slidePos,target);
         double ff = Math.cos(Math.toRadians(target / ticksInDegree)) * f;
         double power = pid + ff;
-        jointMotor.setPower(power);
+        slideMotor.setPower(power);
 
-        telemetry.addData("pos", jointPos);
+        telemetry.addData("pos", slidePos);
         telemetry.addData("target", target);
         telemetry.update();
     }

@@ -17,12 +17,18 @@ import org.firstinspires.ftc.teamcode.teleOp.twoWheelDrive;
 
 @Autonomous
 public class mecanumAuto extends OpMode {
-    private PIDController controller;
-    double p = 0.004,i = 0, d = 0.0002;
-    double f = 0.03;
+    private PIDController armController;
+    private PIDController slideController;
+    double armP = 0.004,armI = 0, armD = 0.0002;
+    double armF = 0.03;
     int armTarget = 0;
     int armThreshold = 10;
-    double ticksInDegree = 285 / 180;//1425
+    double armTicksInDegree = 285 / 180;//1425
+    double slideP = 0.006,slideI = 0, slideD = 0.0001;
+    double slideF = 0.04;
+    int slideTarget = 0;
+    int slideThreshold = 50;
+    double slideTicksInDegree = 358.466 / 180;//1425
     double cpr = 537.7;
     double gearRatio = 1;
     double diameter = 4.1; //4.09449 in inches - mecanum
@@ -59,25 +65,24 @@ public class mecanumAuto extends OpMode {
     }
     private DriveState currentDriveState = DriveState.IDLE;
     private enum armState{
-        IDLE, HOLDING,MOVING//same as completed
+        IDLE, COMPLETED,MOVING//same as completed
     }
     private armState currentArmState = armState.IDLE;
     private enum StrafeState{
         IDLE,MOVING,COMPLETED
     }
     private StrafeState currentStrafeState = StrafeState.IDLE;
-    boolean isDriveIdle = isDriveState(currentDriveState, DriveState.IDLE);
-    boolean isDriveCompleted = isDriveState(currentDriveState, DriveState.COMPLETED);
     @Override
     public void init() {
-        controller = new PIDController(p,i,d);
+        armController = new PIDController(armP,armI,armD);
+        slideController = new PIDController(slideP,slideI,slideD);
 
         frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor"); // EXP 2
         backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor"); // EXP 3
         backLeftMotor = hardwareMap.get(DcMotor.class, "backLeftMotor"); // EXP 0
         frontLeftMotor = hardwareMap.get(DcMotor.class, "frontLeftMotor"); // EXP 1
         jointMotor = hardwareMap.get(DcMotorEx.class, "jointMotor"); // CON - 3
-        slideMotor = hardwareMap.get(DcMotor.class, "slideMotor"); // CON - 0
+        slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor"); // CON - 0
         wristServo = hardwareMap.get(Servo.class,"wristServo"); // CON - 0
         clawServo = hardwareMap.get(Servo.class,"clawServo"); // EXP - 5
         basketServo = hardwareMap.get(Servo.class,"basketServo"); // CON - 4
@@ -90,12 +95,12 @@ public class mecanumAuto extends OpMode {
         jointMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //jointMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        jointMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
@@ -128,14 +133,16 @@ public class mecanumAuto extends OpMode {
         updateTelemetry();
         switch(currentOrderState){
             case FIRST:
-                if (isDriveIdle){
-                    moveToPos(12,0.5);
+                if ((currentDriveState == DriveState.IDLE) && (currentSlideState == SlideState.IDLE)){
+                    //moveToPos(20,0.2);
+                    setTargetSlide(1500);
                     //setTargetArm(3000);
                    // wristServo.setPosition(0.55);
                 }
-                if (isDriveCompleted){
+                if ( (currentSlideState == SlideState.COMPLETED)){
                     //currentArmState = armState.IDLE;
                     currentDriveState = DriveState.IDLE;
+                    currentSlideState = SlideState.IDLE;
                     currentOrderState = OrderState.SECOND;
                 }
                 /*if (currentDriveState == DriveState.IDLE && currentSlideState == SlideState.IDLE){
@@ -256,10 +263,10 @@ public class mecanumAuto extends OpMode {
         currentArmState = armState.MOVING;
     }
     public void moveArm(int target){
-        controller.setPID(p,i,d);
+        armController.setPID(armP,armI,armD);
         int jointPos = jointMotor.getCurrentPosition();
-        double pid = controller.calculate(jointPos,target);
-        double ff = Math.cos(Math.toRadians(target / ticksInDegree)) * f;
+        double pid = armController.calculate(jointPos,target);
+        double ff = Math.cos(Math.toRadians(target / armTicksInDegree)) * armF;
         double power = pid + ff;
         jointMotor.setPower(power);
     }
@@ -269,7 +276,7 @@ public class mecanumAuto extends OpMode {
                 int currentPos1 = jointMotor.getCurrentPosition();
                 moveArm(currentPos1);
                 break;
-            case HOLDING:
+            case COMPLETED:
                 moveArm(armTarget);
                 break;
             case MOVING:
@@ -277,33 +284,43 @@ public class mecanumAuto extends OpMode {
                 double currentPos2 = jointMotor.getCurrentPosition();
 
                 if (Math.abs((armTarget - currentPos2)) < armThreshold){
-                    currentArmState = armState.HOLDING;
+                    currentArmState = armState.COMPLETED;
                 }
 
         }
+    }
+    public void setTargetSlide(int target){
+        slideTarget = target;
+        currentSlideState = SlideState.MOVING;
+    }
+    public void moveSlide(int target){
+        slideController.setPID(slideP,slideI,slideD);
+        int slidePos = slideMotor.getCurrentPosition();
+        double pid = slideController.calculate(slidePos,target);
+        double ff = Math.cos(Math.toRadians(target / slideTicksInDegree)) * slideF;
+        double power = pid + ff;
+        slideMotor.setPower(power);
     }
     public void slideFSM(){
-        switch (currentSlideState) {
+        switch (currentSlideState){
             case IDLE:
+                int currentPos1 = slideMotor.getCurrentPosition();
+                moveSlide(currentPos1);
                 break;
-
-            case MOVING:
-                // Check if the slide has reached the target
-                if (!slideMotor.isBusy()) {
-                    // If it's done moving, transition to COMPLETED state
-                    slideMotor.setPower(0);  // Stop the motor
-                    currentSlideState = SlideState.COMPLETED;
-                    break;
-                }
-                break;
-
             case COMPLETED:
-                // Now transition back to IDLE for future movement
+                moveSlide(slideTarget);
                 break;
+            case MOVING:
+                moveSlide(slideTarget);
+                double currentPos2 = slideMotor.getCurrentPosition();
+
+                if (Math.abs((slideTarget - currentPos2)) < slideThreshold){
+                    currentSlideState = SlideState.COMPLETED;
+                }
 
         }
-
     }
+
     public void driveFSM(){
         switch (currentDriveState) {
             case IDLE:

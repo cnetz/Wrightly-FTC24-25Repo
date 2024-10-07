@@ -95,7 +95,7 @@ public class mecanumDrive extends LinearOpMode {
         while(opModeIsActive()) {
 
             double y = gamepad1.left_stick_y;// set y to gamepad 1 left stick y
-            double x = gamepad1.left_stick_x * bias;// set x to gamepad 1 left stick x
+            double x = -gamepad1.left_stick_x * bias;// set x to gamepad 1 left stick x
             double rx = -gamepad1.right_stick_x;
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);//maxumum x+y =1
             double backRightPower = ((y + x - rx) / denominator);
