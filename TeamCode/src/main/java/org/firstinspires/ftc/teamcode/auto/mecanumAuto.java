@@ -133,7 +133,7 @@ public class mecanumAuto extends OpMode {
         updateTelemetry();
         switch(currentOrderState){
             case FIRST:
-                if ((currentDriveState == DriveState.IDLE) && (currentSlideState == SlideState.IDLE)){
+                if ((currentSlideState == SlideState.IDLE)){
                     //moveToPos(20,0.2);
                     setTargetSlide(1500);
                     //setTargetArm(3000);
@@ -194,6 +194,8 @@ public class mecanumAuto extends OpMode {
         telemetry.addData("ArmState", currentArmState);
         telemetry.addData("armTarget", armTarget);
         telemetry.addData("jointPos", jointMotor.getCurrentPosition());
+        telemetry.addData("slideTarget", slideTarget);
+        telemetry.addData("slidePos", slideMotor.getCurrentPosition());
         telemetry.addData("jointPower", jointMotor.getPower());
         telemetry.update();
     }
@@ -317,7 +319,6 @@ public class mecanumAuto extends OpMode {
                 if (Math.abs((slideTarget - currentPos2)) < slideThreshold){
                     currentSlideState = SlideState.COMPLETED;
                 }
-
         }
     }
 
