@@ -19,16 +19,16 @@ import org.firstinspires.ftc.teamcode.teleOp.twoWheelDrive;
 public class mecanumAuto extends OpMode {
     private PIDController armController;
     private PIDController slideController;
-    double armP = 0.004,armI = 0, armD = 0.0002;
+    double armP = 0.004,armI = 0, armD = 0.0002; //adjust P to increase speed maybe
     double armF = 0.03;
     int armTarget = 0;
     int armThreshold = 10;
-    double armTicksInDegree = 285 / 180;//1425
-    double slideP = 0.006,slideI = 0, slideD = 0.0001;
+    double armTicksInDegree = 285 / 180;//1425 / 5 = 285
+    double slideP = 0.02,slideI = 0, slideD = 0.0001;
     double slideF = 0.04;
     int slideTarget = 0;
-    int slideThreshold = 50;
-    double slideTicksInDegree = 358.466 / 180;//1425
+    int slideThreshold = 10;
+    double slideTicksInDegree = 358.466 / 180;
     double cpr = 537.7;
     double gearRatio = 1;
     double diameter = 4.1; //4.09449 in inches - mecanum
@@ -39,12 +39,12 @@ public class mecanumAuto extends OpMode {
     double conversion = cpi * bias;
     double robotWidth = 12.9;
     double turnCF = Math.PI * robotWidth;
-    private DcMotor jointMotor; // location
+    private DcMotorEx jointMotor; // location
     private DcMotor frontLeftMotor; // location
     private DcMotor backLeftMotor; // location
     private DcMotor backRightMotor; // location
     private DcMotor frontRightMotor; // location
-    private DcMotor slideMotor; // location
+    private DcMotorEx slideMotor; // location
     private Servo wristServo;
     private Servo clawServo;
     private Servo basketServo;
@@ -53,7 +53,7 @@ public class mecanumAuto extends OpMode {
     private boolean fiveSeconds = false;
     private boolean exit = false;
     private enum OrderState{
-        FIRST,SECOND,THIRD
+        FIRST,SECOND,THIRD,FOURTH
     }
     private OrderState currentOrderState = OrderState.FIRST;
     private enum SlideState{
@@ -99,8 +99,8 @@ public class mecanumAuto extends OpMode {
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        jointMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //jointMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
@@ -124,7 +124,8 @@ public class mecanumAuto extends OpMode {
 
     @Override
     public void start() {
-        clawServo.setPosition(0.75);
+        clawServo.setPosition(0.8);
+        basketServo.setPosition(0.3);
         newTimer.reset();
     }
 
@@ -133,41 +134,41 @@ public class mecanumAuto extends OpMode {
         updateTelemetry();
         switch(currentOrderState){
             case FIRST:
-                if ((currentSlideState == SlideState.IDLE)){
-                    //moveToPos(20,0.2);
-                    setTargetSlide(1500);
-                    //setTargetArm(3000);
-                   // wristServo.setPosition(0.55);
+                if ((currentDriveState == DriveState.IDLE) && (currentSlideState == SlideState.IDLE)){
+                    moveToPos(10,0.35);
+                    setTargetSlide(2400);
                 }
-                if ( (currentSlideState == SlideState.COMPLETED)){
-                    //currentArmState = armState.IDLE;
+                if ((currentDriveState == DriveState.COMPLETED) && (currentSlideState == SlideState.COMPLETED)){
                     currentDriveState = DriveState.IDLE;
                     currentSlideState = SlideState.IDLE;
                     currentOrderState = OrderState.SECOND;
                 }
-                /*if (currentDriveState == DriveState.IDLE && currentSlideState == SlideState.IDLE){
-                //moveSlide(12,0.2);
-                // moveToPos(20,0.2);
-            }
-                if (currentDriveState == DriveState.COMPLETED && currentSlideState == SlideState.COMPLETED){
-                    currentDriveState = DriveState.IDLE;
-                    currentSlideState = SlideState.IDLE;
-                    currentOrderState = OrderState.SECOND;
-                }*/
                 break;
             case SECOND:
-                if (currentDriveState == DriveState.IDLE && currentSlideState == SlideState.IDLE){
-                    // moveSlide(-12,0.2);
-                    // moveToPos(-20,0.2);
+                if ((currentArmState == armState.IDLE)){
+                    setTargetArm(3700);
+                    wristServo.setPosition(0.3);
                 }
-                if (currentDriveState == DriveState.COMPLETED && currentSlideState == SlideState.COMPLETED){
-                    currentDriveState = DriveState.IDLE;
-                    currentSlideState = SlideState.IDLE;
-                    currentOrderState = OrderState.THIRD;
+                if ((currentArmState == armState.COMPLETED)){
+                    currentArmState = armState.IDLE;
+                    if (wristServo.getPosition() == 0.3) {
+                        currentOrderState = OrderState.THIRD;
+                    }
                 }
                 break;
             case THIRD:
+                if ((currentArmState == armState.IDLE)){
+                    //wristServo.setPosition(0.5);
+                    //setTargetArm(2480);
+                }
+                if ((currentArmState == armState.COMPLETED)){
+                    //clawServo.setPosition(0.6);
+                    currentArmState = armState.IDLE;
+                }
                 break;
+            case FOURTH:
+                break;
+
         }
         strafeFSM();
         driveFSM();
@@ -242,7 +243,7 @@ public class mecanumAuto extends OpMode {
         currentStrafeState = StrafeState.MOVING;
 
     }
-    public void moveSlide(double inches, double speed){
+    public void moveSlideNormal(double inches, double speed){
         int move = (int)(Math.round(inches * cpiSlide));
         slideMotor.setTargetPosition(slideMotor.getCurrentPosition() + move);
 
@@ -372,30 +373,6 @@ public class mecanumAuto extends OpMode {
                 // Now transition back to IDLE for future movement
                 break;
         }
-    }
-    private boolean isDriveState(DriveState currentState, DriveState... targetStates){
-        for (DriveState targetState : targetStates){
-            if (currentState == targetState){
-                return true;
-            }
-        }
-        return false;
-    }
-    private boolean isArmState(armState currentState, armState... targetStates){
-        for (armState targetState : targetStates){
-            if (currentState == targetState){
-                return true;
-            }
-        }
-        return false;
-    }
-    private boolean isSlideState(SlideState currentState, SlideState... targetStates){
-        for (SlideState targetState : targetStates){
-            if (currentState == targetState){
-                return true;
-            }
-        }
-        return false;
     }
     //private double calculateSinusoidalSpeed(int currentDistance, int totalDistance)
     //fractionTraveled = (double) currentDistance / totalDistance;
