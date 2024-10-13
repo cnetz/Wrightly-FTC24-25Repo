@@ -376,7 +376,7 @@ public class mecanumAuto extends OpMode {
                 // converts inches to cpr for driving forward and back
                 // Check if the slide has reached the target
 
-/*                if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < POSITION_TOLERANCE &&
+/*              if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < POSITION_TOLERANCE &&
                         Math.abs(frontRightMotor.getCurrentPosition() - frontRightDistance) < POSITION_TOLERANCE &&
                         Math.abs(backLeftMotor.getCurrentPosition() - backLeftDistance) < POSITION_TOLERANCE &&
                         Math.abs(backRightMotor.getCurrentPosition() - backRightDistance) < POSITION_TOLERANCE) {*/
