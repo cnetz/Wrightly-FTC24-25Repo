@@ -216,7 +216,7 @@ public class mecanumAuto extends OpMode {
         telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
         telemetry.addData("time", newTimer.seconds());
         telemetry.addData("Slide", slideMotor.getCurrentPosition());
-        telemetry.addData("frontLeft", frontLeftMotor.getCurrentPosition());
+        telemetry.addData("frontLeft", frontLeftMotor.getPower());
         telemetry.addData("frontRight", frontRightMotor.getCurrentPosition());
         telemetry.addData("backLeft", backLeftMotor.getCurrentPosition());
         telemetry.addData("backRight", backRightMotor.getCurrentPosition());
