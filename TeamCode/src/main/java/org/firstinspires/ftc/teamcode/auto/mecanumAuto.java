@@ -246,7 +246,7 @@ public class mecanumAuto extends OpMode {
         backLeftMotor.setTargetPosition(backLeftMotor.getCurrentPosition() + move);
         backRightMotor.setTargetPosition(backRightMotor.getCurrentPosition() + move);
 
-        frontLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION); //Change to RUN_USING_ENCODER
         frontRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         backLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         backRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -264,9 +264,9 @@ public class mecanumAuto extends OpMode {
         currentInches = inches;
         if (inches > 5) {
             frontLeftDistance = (frontLeftMotor.getCurrentPosition() + move);
-            backLeftDistance = (backLeftMotor.getCurrentPosition() + move);
+            backLeftDistance = (backLeftMotor.getCurrentPosition() - move);
             backRightDistance = (backRightMotor.getCurrentPosition() + move);
-            frontRightDistance = (frontRightMotor.getCurrentPosition() + move);
+            frontRightDistance = (frontRightMotor.getCurrentPosition() - move);
         }
 
         frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() + move);
@@ -375,7 +375,16 @@ public class mecanumAuto extends OpMode {
             case MOVING:
                 // converts inches to cpr for driving forward and back
                 // Check if the slide has reached the target
-                if (currentInches > 5){ //not changing over a distance   //
+
+/*                if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < POSITION_TOLERANCE &&
+                        Math.abs(frontRightMotor.getCurrentPosition() - frontRightDistance) < POSITION_TOLERANCE &&
+                        Math.abs(backLeftMotor.getCurrentPosition() - backLeftDistance) < POSITION_TOLERANCE &&
+                        Math.abs(backRightMotor.getCurrentPosition() - backRightDistance) < POSITION_TOLERANCE) {*/
+
+
+
+
+                if (currentInches > 5){ //not changing over a distance
                     double frontLeftSpeed = calculateSpeed(frontLeftMotor.getCurrentPosition(), (int) frontLeftDistance);
                     double frontRightSpeed = calculateSpeed(frontRightMotor.getCurrentPosition(), (int) frontRightDistance);
                     double backLeftSpeed = calculateSpeed(backLeftMotor.getCurrentPosition(), (int) backLeftDistance);
