@@ -144,7 +144,7 @@ public class mecanumAuto extends OpMode {
         switch(currentOrderState){
             case FIRST:
                 if ((currentDriveState == DriveState.IDLE) && (currentSlideState == SlideState.IDLE)){
-                    moveToPos(-10,0.35);
+                    moveToPos(-40,0.1);
                     setTargetSlide(2800);
                 }
                 if ((currentDriveState == DriveState.COMPLETED) && (currentSlideState == SlideState.COMPLETED)){
@@ -167,7 +167,7 @@ public class mecanumAuto extends OpMode {
                 break;
             case THIRD:
                 if ((currentDriveState == DriveState.IDLE)){
-                    moveToPos(-10,0.35);
+                    moveToPos(-10,0.1);
                 }
                 if ((currentDriveState == DriveState.COMPLETED)){
                     currentDriveState = DriveState.IDLE;
@@ -375,7 +375,7 @@ public class mecanumAuto extends OpMode {
             case MOVING:
                 // converts inches to cpr for driving forward and back
                 // Check if the slide has reached the target
-                if (currentInches > 5){
+                if (currentInches > 5){ //not changing over a distance
                     double frontLeftSpeed = calculateSpeed(frontLeftMotor.getCurrentPosition(), (int) frontLeftDistance);
                     double frontRightSpeed = calculateSpeed(frontRightMotor.getCurrentPosition(), (int) frontRightDistance);
                     double backLeftSpeed = calculateSpeed(backLeftMotor.getCurrentPosition(), (int) backLeftDistance);
