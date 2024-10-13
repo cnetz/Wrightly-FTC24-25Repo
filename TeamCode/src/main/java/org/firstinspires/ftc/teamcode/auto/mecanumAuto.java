@@ -375,7 +375,7 @@ public class mecanumAuto extends OpMode {
             case MOVING:
                 // converts inches to cpr for driving forward and back
                 // Check if the slide has reached the target
-                if (currentInches > 5){ //not changing over a distance
+                if (currentInches > 5){ //not changing over a distance   //
                     double frontLeftSpeed = calculateSpeed(frontLeftMotor.getCurrentPosition(), (int) frontLeftDistance);
                     double frontRightSpeed = calculateSpeed(frontRightMotor.getCurrentPosition(), (int) frontRightDistance);
                     double backLeftSpeed = calculateSpeed(backLeftMotor.getCurrentPosition(), (int) backLeftDistance);
