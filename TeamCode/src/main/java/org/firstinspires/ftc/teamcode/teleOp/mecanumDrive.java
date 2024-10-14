@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleOp;
 
 import com.arcrobotics.ftclib.controller.PIDController;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,6 +13,9 @@ import org.firstinspires.ftc.teamcode.ButtonHandler;
 
 @TeleOp
 public class mecanumDrive extends LinearOpMode {
+    private RevBlinkinLedDriver lights;
+    private Boolean lightsTimer = false;
+    private int lightsDelay = 2000;
     double cpr = 537.7;
     double gearRatio = 1;
     double slideDiameter = 1.5;
@@ -69,9 +73,11 @@ public class mecanumDrive extends LinearOpMode {
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        lights = hardwareMap.get(RevBlinkinLedDriver.class,"lights");
         //Reverse the other motors and sex X to not negative
 
-        double changeSpeed = 0.65;
+        double changeSpeed = 0.45;
         boolean changeSpeedPos = false;
         boolean wristPos = false;
         boolean clawPos = false;
@@ -92,6 +98,7 @@ public class mecanumDrive extends LinearOpMode {
         if (isStopRequested()) return;
 
         while(opModeIsActive()) {
+            lightsUpdate();
 
             double y = gamepad1.left_stick_y;// set y to gamepad 1 left stick y
             double x = -gamepad1.left_stick_x * bias;// set x to gamepad 1 left stick x
@@ -109,10 +116,10 @@ public class mecanumDrive extends LinearOpMode {
 
             //slideMotor.setPower(gamepad2.left_stick_y)
             if (gamepad2.right_trigger > 0){
-                armTempPos = armTarget + 5;
+                armTempPos = armTarget + 10;
                 setTargetArm(armTempPos);
             } else if(gamepad2.left_trigger >0) {
-                armTempPos = armTarget - 5;
+                armTempPos = armTarget - 10;
                 setTargetArm(armTempPos);
             }else{
                 currentArmState = armState.HOLDING;
@@ -121,60 +128,38 @@ public class mecanumDrive extends LinearOpMode {
             armFSM();
             slideFSM();
 
-            if (buttonHandler.isPressedOnceA_1(gamepad1.a)) {
+            if (buttonHandler.isPressedOnceRB_1(gamepad1.right_bumper)) { //change to right bumper
                 if (changeSpeedPos) {
                     changeSpeedPos = false;
-                    changeSpeed = 0.65; //speed is 1
+                    changeSpeed = 0.50; //speed is 1
 
                 } else { //speed is halved
                     changeSpeed = 0.25 ;
                     changeSpeedPos = true;
                 }
             }
-            if (buttonHandler.isPressedOnceB_2(gamepad2.b)) {
-                if (wristPos) {
-                    wristServo.setPosition(0.45);
-                    wristPos = false;
 
-                } else {
-                    wristPos = true;
-                    wristServo.setPosition(0.75);
-                }
+            //gamepad2
+            if (buttonHandler.isPressedOnceB_2(gamepad2.b)) {
+                wristServo.setPosition(0.8);
             }
             if (buttonHandler.isPressedOnceA_2(gamepad2.a)) {
-                if (clawPos) {
-                    clawServo.setPosition(.1);
-                    clawPos = false;
-
-                } else {
-                    clawPos = true;
-                    clawServo.setPosition(0.75);
-                }
+                wristServo.setPosition(0.4);
             }
             if (buttonHandler.isPressedOnceX_2(gamepad2.x)) {
-                if (wristPosX) {
-                    wristServo.setPosition(0.45);
-                    wristPosX = false;
-
-                } else {
-                    wristPosX = true;
-                    wristServo.setPosition(0.1);
-                }
+                wristServo.setPosition(0.1);
             }
             if (gamepad2.y) {
-                clawServo.setPosition(0.6);
+                clawServo.setPosition(0.5); // changed from 0.6
             }  else {
-                clawServo.setPosition(0.75); //if claw loose adjust + 0.05
+                clawServo.setPosition(0.72); //if claw loose adjust + 0.05
             }
-            if (buttonHandler.isPressedOnceRB_2(gamepad2.right_bumper)) {
-                if (rbPos) {
-                    basketServo.setPosition(0.7);
-                    rbPos = false;
-
-                } else {
-                    rbPos = true;
-                    basketServo.setPosition(0.3);
-                }
+            if (gamepad2.right_bumper){
+                basketServo.setPosition(0.7);
+            }else if (gamepad2.left_bumper){
+                basketServo.setPosition(0.7);
+            }else {
+                basketServo.setPosition(0.3);
             }
             telemetry.addData("arm State", currentArmState);
             telemetry.addData("target ", armTarget);
@@ -253,6 +238,20 @@ public class mecanumDrive extends LinearOpMode {
                 }
                 break;
         }
+    }
+    public void lightsUpdate(){
+        if (60 > newTimer.seconds()){
+            lights.setPattern(RevBlinkinLedDriver.BlinkinPattern.GREEN);
+        } else if (90 > newTimer.seconds()){
+            lights.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLUE);
+        } else if (105 > newTimer.seconds()){
+            lights.setPattern(RevBlinkinLedDriver.BlinkinPattern.WHITE);
+        } else if (120 > newTimer.seconds()){
+            lights.setPattern(RevBlinkinLedDriver.BlinkinPattern.RED);
+        } else if (140 > newTimer.seconds()){
+            lights.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK);
+        }
+
     }
 }
 

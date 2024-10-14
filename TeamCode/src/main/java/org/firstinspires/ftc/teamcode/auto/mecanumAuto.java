@@ -17,6 +17,7 @@ import org.firstinspires.ftc.teamcode.teleOp.twoWheelDrive;
 
 @Autonomous
 public class mecanumAuto extends OpMode {
+    double driveTolerance = 10;
     double currentInches = 0;
     double frontLeftDistance = 0;
     double backLeftDistance = 0;
@@ -215,9 +216,11 @@ public class mecanumAuto extends OpMode {
 
         telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
         telemetry.addData("time", newTimer.seconds());
-        telemetry.addData("Slide", slideMotor.getCurrentPosition());
-        telemetry.addData("frontLeft", frontLeftMotor.getPower());
-        telemetry.addData("frontRight", frontRightMotor.getCurrentPosition());
+        telemetry.addData("inches", currentInches);
+        telemetry.addData("frontLeftDistance", frontLeftDistance);
+        telemetry.addData("frontLeftPower", frontLeftMotor.getPower());
+        telemetry.addData("frontLeftPos", frontLeftMotor.getCurrentPosition());
+/*        telemetry.addData("frontRight", frontRightMotor.getCurrentPosition());
         telemetry.addData("backLeft", backLeftMotor.getCurrentPosition());
         telemetry.addData("backRight", backRightMotor.getCurrentPosition());
         telemetry.addData("DriveState", currentDriveState);
@@ -227,29 +230,24 @@ public class mecanumAuto extends OpMode {
         telemetry.addData("jointPos", jointMotor.getCurrentPosition());
         telemetry.addData("slideTarget", slideTarget);
         telemetry.addData("slidePos", slideMotor.getCurrentPosition());
-        telemetry.addData("jointPower", jointMotor.getPower());
+        telemetry.addData("jointPower", jointMotor.getPower());*/
         telemetry.update();
     }
 
     public void moveToPos(double inches, double speed) {
         int move = (int)(Math.round(inches * conversion));
-        currentInches = inches;
-        if (inches > 5) {
+        currentInches = Math.abs(inches);
+        if (currentInches > 5) {
             frontLeftDistance = (frontLeftMotor.getCurrentPosition() + move);
             backLeftDistance = (backLeftMotor.getCurrentPosition() + move);
             backRightDistance = (backRightMotor.getCurrentPosition() + move);
             frontRightDistance = (frontRightMotor.getCurrentPosition() + move);
         }
 
-        frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() + move);
-        frontRightMotor.setTargetPosition(frontRightMotor.getCurrentPosition() + move);
-        backLeftMotor.setTargetPosition(backLeftMotor.getCurrentPosition() + move);
-        backRightMotor.setTargetPosition(backRightMotor.getCurrentPosition() + move);
-
-        frontLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION); //Change to RUN_USING_ENCODER
-        frontRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        backLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        backRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //Change to RUN_USING_ENCODER
+        frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         frontLeftMotor.setPower(speed);
         frontRightMotor.setPower(speed);
@@ -261,8 +259,8 @@ public class mecanumAuto extends OpMode {
     }
     public void strafeToPos(double inches, double speed) {
         int move = (int)(Math.round(inches * conversion));
-        currentInches = inches;
-        if (inches > 5) {
+        currentInches = Math.abs(inches);
+        if (currentInches > 5) {
             frontLeftDistance = (frontLeftMotor.getCurrentPosition() + move);
             backLeftDistance = (backLeftMotor.getCurrentPosition() - move);
             backRightDistance = (backRightMotor.getCurrentPosition() + move);
@@ -373,45 +371,54 @@ public class mecanumAuto extends OpMode {
                 break;
 
             case MOVING:
-                // converts inches to cpr for driving forward and back
-                // Check if the slide has reached the target
+                // Continuously calculate and update motor speed to reach the target
+                if (currentInches > 5) {
+                    // Check each motor individually
+                    if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < driveTolerance) {
+                        // Stop the front left motor if it has reached its target
+                        frontLeftMotor.setPower(0);
+                    } else {
+                        // Calculate and set power if still moving
+                        double frontLeftSpeed = calculateSpeed(frontLeftMotor.getCurrentPosition(), (int) frontLeftDistance);
+                        frontLeftMotor.setPower(frontLeftSpeed);
+                    }
 
-/*              if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < POSITION_TOLERANCE &&
-                        Math.abs(frontRightMotor.getCurrentPosition() - frontRightDistance) < POSITION_TOLERANCE &&
-                        Math.abs(backLeftMotor.getCurrentPosition() - backLeftDistance) < POSITION_TOLERANCE &&
-                        Math.abs(backRightMotor.getCurrentPosition() - backRightDistance) < POSITION_TOLERANCE) {*/
+                    if (Math.abs(frontRightMotor.getCurrentPosition() - frontRightDistance) < driveTolerance) {
+                        // Stop the front right motor if it has reached its target
+                        frontRightMotor.setPower(0);
+                    } else {
+                        // Calculate and set power if still moving
+                        double frontRightSpeed = calculateSpeed(frontRightMotor.getCurrentPosition(), (int) frontRightDistance);
+                        frontRightMotor.setPower(frontRightSpeed);
+                    }
 
+                    if (Math.abs(backLeftMotor.getCurrentPosition() - backLeftDistance) < driveTolerance) {
+                        // Stop the back left motor if it has reached its target
+                        backLeftMotor.setPower(0);
+                    } else {
+                        // Calculate and set power if still moving
+                        double backLeftSpeed = calculateSpeed(backLeftMotor.getCurrentPosition(), (int) backLeftDistance);
+                        backLeftMotor.setPower(backLeftSpeed);
+                    }
 
-
-
-                if (currentInches > 5){ //not changing over a distance
-                    double frontLeftSpeed = calculateSpeed(frontLeftMotor.getCurrentPosition(), (int) frontLeftDistance);
-                    double frontRightSpeed = calculateSpeed(frontRightMotor.getCurrentPosition(), (int) frontRightDistance);
-                    double backLeftSpeed = calculateSpeed(backLeftMotor.getCurrentPosition(), (int) backLeftDistance);
-                    double backRightSpeed = calculateSpeed(backRightMotor.getCurrentPosition(), (int) backRightDistance);
-
-                    frontLeftMotor.setPower(frontLeftSpeed);
-                    frontRightMotor.setPower(frontRightSpeed);
-                    backLeftMotor.setPower(backLeftSpeed);
-                    backRightMotor.setPower(backRightSpeed);
+                    if (Math.abs(backRightMotor.getCurrentPosition() - backRightDistance) < driveTolerance) {
+                        // Stop the back right motor if it has reached its target
+                        backRightMotor.setPower(0);
+                    } else {
+                        // Calculate and set power if still moving
+                        double backRightSpeed = calculateSpeed(backRightMotor.getCurrentPosition(), (int) backRightDistance);
+                        backRightMotor.setPower(backRightSpeed);
+                    }
                 }
 
+                // Check if all motors have reached the target positions within some tolerance
+                if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < driveTolerance &&
+                        Math.abs(frontRightMotor.getCurrentPosition() - frontRightDistance) < driveTolerance &&
+                        Math.abs(backLeftMotor.getCurrentPosition() - backLeftDistance) < driveTolerance &&
+                        Math.abs(backRightMotor.getCurrentPosition() - backRightDistance) < driveTolerance) {
 
-                if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
-                    // If it's done moving, transition to COMPLETED state
-                    currentInches = 0;
-                    frontLeftDistance = 0;
-                    backLeftDistance = 0;
-                    backRightDistance = 0;
-                    frontRightDistance = 0;
-
-                    frontLeftMotor.setPower(0);
-                    frontRightMotor.setPower(0);
-                    backLeftMotor.setPower(0);
-                    backRightMotor.setPower(0);
-
+                    // All motors have reached their target; transition to COMPLETED state
                     currentDriveState = DriveState.COMPLETED;
-                    break;
                 }
                 break;
 
@@ -482,8 +489,12 @@ public class mecanumAuto extends OpMode {
     // return currentSpeed;
 
     private double calculateSpeed(int currentDistance, int totalDistance){
-        double traveled = (double) currentDistance / totalDistance;
-        double speed = baseSpeed + (maxSpeed - baseSpeed) * Math.sin(Math.PI * traveled);
-        return speed;
+        int distanceRemaining = Math.abs(totalDistance - currentDistance);
+        int totalTravelDistance = Math.abs(totalDistance);
+
+        double traveled = 1.0 - (double)(distanceRemaining / totalTravelDistance);
+        traveled = Math.max(1, Math.max(0, traveled));
+
+        return (baseSpeed + (maxSpeed - baseSpeed) * Math.sin(Math.PI * traveled));
     }
 }
