@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode.Systems;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
-public class RobotControl{
+public class RobotControl extends OpMode {
 
     private DcMotorEx motor;
     private MotionProfile motionProfile;
@@ -21,12 +19,7 @@ public class RobotControl{
 
     public void start() {
         // Start the first motion when the op mode starts
-        startNewMotion();
-    }
-
-    // Function to start a new motion
-    public void startNewMotion() {
-        motionProfile.startMotionProfile();  // Reset the timer for the new motion
+        motionProfile.startMotionProfile();
     }
 
     // Main control loop
@@ -40,10 +33,9 @@ public class RobotControl{
                 targetDistance = 1000;
                 drive(targetDistance);
 
-                if (motionProfile.isTrajectoryDone(targetDistance, motor.getCurrentPosition())) {
-                    motor.setPower(0);  // Stop the motor
+                if (!motor.isBusy()) {
                     currentStep++;  // Move to the next step
-                    startNewMotion();  // Reset the timer for the next motion
+                    motionProfile.startMotionProfile();  // Reset the timer for the next motion
                 }
                 break;
 
@@ -52,9 +44,9 @@ public class RobotControl{
                 targetDistance = 500;
                 drive(targetDistance);
 
-                if (motionProfile.isTrajectoryDone(targetDistance, motor.getCurrentPosition())) {
-                    motor.setPower(0);  // Stop the motor
-                    currentStep++;  // Move to the next step (or end)
+                if (!motor.isBusy()) {
+                    currentStep++;  // Move to the next step
+                    motionProfile.startMotionProfile();  // Reset the timer for the next motion
                 }
                 break;
 

@@ -34,13 +34,19 @@ public class MotionProfile {
         // Calculate motor power using position error (Kp), velocity feedback (Kv), and acceleration feedback (Ka)
         double motorPower = (x - currentPosition) * Kp + Kv * v + Ka * a;
 
+        if(Math.abs(targetDistance - currentPosition) < positionTolerance){
+            return 0;
+        }
         // Limit the motor power to the allowed range (-1 to 1)
         return Math.max(-1, Math.min(1, motorPower));
     }
 
     // Method to check if the trajectory is done based on position tolerance
     public boolean isTrajectoryDone(double targetDistance, double currentPosition) {
-        return Math.abs(targetDistance - currentPosition) < positionTolerance;
+        if(Math.abs(targetDistance - currentPosition) < positionTolerance){
+            return true;
+        }
+        return false;
     }
 
     // Method to calculate position based on elapsed time
