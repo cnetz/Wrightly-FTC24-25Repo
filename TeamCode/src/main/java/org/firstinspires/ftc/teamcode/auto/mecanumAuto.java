@@ -244,10 +244,10 @@ public class mecanumAuto extends OpMode {
             frontRightDistance = (frontRightMotor.getCurrentPosition() + move);
         }
 
-        frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //Change to RUN_USING_ENCODER
-        frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); //Change to RUN_WITHOUT_ENCODER
+        frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         frontLeftMotor.setPower(speed);
         frontRightMotor.setPower(speed);
@@ -488,13 +488,16 @@ public class mecanumAuto extends OpMode {
     // }
     // return currentSpeed;
 
-    private double calculateSpeed(int currentDistance, int totalDistance){
-        int distanceRemaining = Math.abs(totalDistance - currentDistance);
-        int totalTravelDistance = Math.abs(totalDistance);
+    private double calculateSpeed(double currentDistance, double totalDistance){
+        double distanceRemaining = Math.abs(totalDistance - currentDistance);
+        double totalTravelDistance = Math.abs(totalDistance);
 
-        double traveled = 1.0 - (double)(distanceRemaining / totalTravelDistance);
-        traveled = Math.max(1, Math.max(0, traveled));
+        double traveled = distanceRemaining / totalTravelDistance;
 
-        return (baseSpeed + (maxSpeed - baseSpeed) * Math.sin(Math.PI * traveled));
+        if(Math.abs(distanceRemaining - totalTravelDistance) <= driveTolerance) {
+            return 0;
+        } else{
+            return (baseSpeed + (maxSpeed - baseSpeed) * Math.sin(Math.PI * traveled));
+        }
     }
 }
