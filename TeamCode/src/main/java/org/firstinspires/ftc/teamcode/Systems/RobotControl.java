@@ -1,8 +1,11 @@
 package org.firstinspires.ftc.teamcode.Systems;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
+@Autonomous
 public class RobotControl extends OpMode {
 
     private DcMotorEx motor;
@@ -11,52 +14,54 @@ public class RobotControl extends OpMode {
 
     public void init() {
         motor = hardwareMap.get(DcMotorEx.class, "motor");
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
         // Initialize the motion profile
         motionProfile = new MotionProfile();
     }
 
+    public void init_loop() {
+        telemetry.addData("CurrentPos", motor.getCurrentPosition());
+        telemetry.addData("Current Step", currentStep);
+        telemetry.update();
+    }
     public void start() {
         // Start the first motion when the op mode starts
-        motionProfile.startMotionProfile();
+        //motionProfile.startMotionProfile();
     }
 
     // Main control loop
     public void loop() {
-        double targetDistance;
-
         // Sequential motion steps
         switch (currentStep) {
             case 0:
-                // First motion: drive 1000 encoder ticks
-                targetDistance = 1000;
-                drive(targetDistance);
+                drive(1000);
 
-                if (!motor.isBusy()) {
+                if (motionProfile.isTrajectoryDone(1000, motor.getCurrentPosition())) {
+                    //motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     currentStep++;  // Move to the next step
-                    motionProfile.startMotionProfile();  // Reset the timer for the next motion
+                    //motionProfile.startMotionProfile();  // Reset the timer for the next motion
                 }
                 break;
-
             case 1:
-                // Second motion: drive 500 encoder ticks
-                targetDistance = 500;
-                drive(targetDistance);
+                drive(-1000);
 
-                if (!motor.isBusy()) {
+                if (motionProfile.isTrajectoryDone(-1000, motor.getCurrentPosition())) {
+                    //motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     currentStep++;  // Move to the next step
-                    motionProfile.startMotionProfile();  // Reset the timer for the next motion
+                    //motionProfile.startMotionProfile();  // Reset the timer for the next motion
                 }
+            case 2:
+                telemetry.addLine("COMPLETED");
                 break;
-
             default:
                 // All motions are complete, you can add more steps if needed
                 break;
         }
 
         // Telemetry for debugging
-        telemetry.addData("Motor Power", motor.getPower());
+        telemetry.addData("CurrentPos", motor.getCurrentPosition());
         telemetry.addData("Current Step", currentStep);
         telemetry.update();
     }
@@ -70,5 +75,8 @@ public class RobotControl extends OpMode {
 
         // Set motor power
         motor.setPower(motorPower);
+
+        telemetry.addData("Target Distance", targetDistance);
+        telemetry.addData("Calculated Motor Power", motorPower);
     }
 }

@@ -1,22 +1,51 @@
 package org.firstinspires.ftc.teamcode.Systems;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-public class MotionProfile {
-
+@Config
+@TeleOp
+public class MotionProfile_CONFIG extends OpMode {
+    private DcMotorEx motor;
     // Fixed motion profile parameters as constants
     public static double maxAcceleration = 2.0;  // Acceleration rate (power/second)
     public static double maxVelocity = 2.5;      // Maximum velocity (motor power)
     public static double Kp = 0.00001;             // Proportional constant for position error
     public static double Kv = 0.15;             // Constant for velocity feedback
     public static double Ka = 0.25;            // Constant for acceleration feedback
+    public static double target = 0;
     public static double positionTolerance = 100; // Tolerance for stopping motion (encoder ticks)
 
     // Internal timer to track elapsed time
-    private ElapsedTime timer;// = new ElapsedTime();
+    private ElapsedTime timer;
 
-    public MotionProfile() {
+    public MotionProfile_CONFIG() {
         timer = new ElapsedTime();
+    }
+
+    @Override
+    public void init() {
+        motor = hardwareMap.get(DcMotorEx.class, "motor");
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+    }
+
+    @Override
+    public void loop() {
+        motor.setPower(calculateMotorPower(target, motor.getCurrentPosition()));
+
+        telemetry.addData("pos", motor.getCurrentPosition());
+        telemetry.addData("target", target);
+        telemetry.addData("Power", motor.getPower());
+        telemetry.addData("Velocity", motor.getVelocity());
+        telemetry.update();
     }
 
     // Reset the timer to start the motion profile
