@@ -77,7 +77,7 @@ public class mecanumDrive extends LinearOpMode {
         lights = hardwareMap.get(RevBlinkinLedDriver.class,"lights");
         //Reverse the other motors and sex X to not negative
 
-        double changeSpeed = 0.45;
+        double changeSpeed = 0.65;
         boolean changeSpeedPos = false;
         boolean wristPos = false;
         boolean clawPos = false;
@@ -131,10 +131,10 @@ public class mecanumDrive extends LinearOpMode {
             if (buttonHandler.isPressedOnceRB_1(gamepad1.right_bumper)) { //change to right bumper
                 if (changeSpeedPos) {
                     changeSpeedPos = false;
-                    changeSpeed = 0.50; //speed is 1
+                    changeSpeed = 0.65; //speed is 1
 
                 } else { //speed is halved
-                    changeSpeed = 0.25 ;
+                    changeSpeed = 0.25;
                     changeSpeedPos = true;
                 }
             }
