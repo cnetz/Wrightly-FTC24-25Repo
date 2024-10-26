@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Other;
 
 public class ButtonHandler {
     private boolean lastStateA_1 = false;
