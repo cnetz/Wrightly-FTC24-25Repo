@@ -14,27 +14,28 @@ import org.firstinspires.ftc.teamcode.Other.ButtonHandler;
 @TeleOp
 public class mecanumDrive extends LinearOpMode {
     private RevBlinkinLedDriver lights;
-    private Boolean lightsTimer = false;
-    private int lightsDelay = 2000;
+
+    // Conversion
     double cpr = 537.7;
     double gearRatio = 1;
     double slideDiameter = 1.5;
     double cpiSlide = (cpr * gearRatio)/(Math.PI * slideDiameter);
     double bias = 1.1;
+
+    //PID Controller
+
     private PIDController controller;
     public static double p = 0.004,i = 0, d = 0.0002;
     public static double f = 0.03;
-    private final double ticksInDegree = 285 / 180;//1425
+    private final double ticksInDegree = (double) 285 / 180; //1425 / 5 (gear ratio) = 285
     int armTarget = 0;
-    private DcMotor jointMotor; // location
-    private DcMotor frontLeftMotor; // location
-    private DcMotor backLeftMotor; // location
-    private DcMotor backRightMotor; // location
-    private DcMotor frontRightMotor; // location
-    private DcMotor slideMotor; // location
-    private Servo wristServo; // location
-    private Servo clawServo; // location
-    private Servo basketServo; // location
+
+    //HardwareMap
+
+    private DcMotor frontLeftMotor, backLeftMotor, backRightMotor, frontRightMotor, slideMotor, jointMotor;
+    private Servo wristServo, clawServo, basketServo;
+
+    //States
 
     private ElapsedTime newTimer = new ElapsedTime();
     private enum armState{
@@ -51,7 +52,12 @@ public class mecanumDrive extends LinearOpMode {
 
     @Override
     public void runOpMode()  {
+
+        //PID Controller
+
         controller = new PIDController(p,i,d);
+
+        //HardwareMap
 
         frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor");
         backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor");
@@ -63,6 +69,8 @@ public class mecanumDrive extends LinearOpMode {
         clawServo = hardwareMap.get(Servo.class,"clawServo");
         basketServo = hardwareMap.get(Servo.class,"basketServo");
 
+        //Motor Power Behavior
+
         frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -70,51 +78,64 @@ public class mecanumDrive extends LinearOpMode {
         jointMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        //Motor Direction & Mode
+
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        //Lights
+
         lights = hardwareMap.get(RevBlinkinLedDriver.class,"lights");
-        //Reverse the other motors and sex X to not negative
+
+        //Defaults
 
         double changeSpeed = 0.65;
         boolean changeSpeedPos = false;
-        boolean wristPos = false;
-        boolean clawPos = false;
-        boolean wristPosX = false;
-        boolean rbPos = false;
-
         int armTempPos = 0;
 
         waitForStart();
-        //wristServo.setPosition(0.45);
+
         armTarget = jointMotor.getCurrentPosition();
         clawServo.setPosition(0.6);
 
         newTimer.reset();
+
+        //Button Handler
 
         ButtonHandler buttonHandler = new ButtonHandler();
 
         if (isStopRequested()) return;
 
         while(opModeIsActive()) {
+
+            //Updates
+
             lightsUpdate();
+            armFSM();
+            slideFSM();
+            updateTelemetry();
 
-            double y = gamepad1.left_stick_y;// set y to gamepad 1 left stick y
-            double x = -gamepad1.left_stick_x * bias;// set x to gamepad 1 left stick x
+            //Driving
+
+            double y = gamepad1.left_stick_y; // set y to gamepad 1 left stick y
+            double x = -gamepad1.left_stick_x * bias; // set x to gamepad 1 left stick x
             double rx = -gamepad1.right_stick_x;
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);//maxumum x+y =1
-            double backRightPower = ((y + x - rx) / denominator);
-            double frontLeftPower = ((y + x + rx) / denominator);// front left motor power = y+x/den
-            double frontRightPower = ((y - x - rx) / denominator);
-            double backLeftPower = ((y - x + rx) / denominator);// front left motor power = y+x/den
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1); // denominator for scaling, which cant go above 1
+            double backRightPower = ((y + x - rx) / denominator); //Set back right power to (gamepad1.left_stick_y) + (-gamepad1.left_stick_x) - (-gamepad1.right_stick_x) / denominator
+            double frontLeftPower = ((y + x + rx) / denominator); //Set front left power to (gamepad1.left_stick_y) + (-gamepad1.left_stick_x) + (-gamepad1.right_stick_x) / denominator
+            double frontRightPower = ((y - x - rx) / denominator); //Set front right power to (gamepad1.left_stick_y) - (-gamepad1.left_stick_x) - (-gamepad1.right_stick_x) / denominator
+            double backLeftPower = ((y - x + rx) / denominator); //Set back left power to (gamepad1.left_stick_y) - (-gamepad1.left_stick_x) + (-gamepad1.right_stick_x) / denominator
 
-            frontRightMotor.setPower(frontRightPower * changeSpeed);//back right motor it sets power/change speed
-            backRightMotor.setPower(backRightPower * changeSpeed);//back right motor it sets power/change speed
-            frontLeftMotor.setPower(frontLeftPower * changeSpeed);//back right motor it sets power/change speed
-            backLeftMotor.setPower(backLeftPower * changeSpeed);//for back left  motor it  sets power/change speed
+            //Set power for motors
 
-            //slideMotor.setPower(gamepad2.left_stick_y)
+            frontRightMotor.setPower(frontRightPower * changeSpeed);
+            backRightMotor.setPower(backRightPower * changeSpeed);
+            frontLeftMotor.setPower(frontLeftPower * changeSpeed);
+            backLeftMotor.setPower(backLeftPower * changeSpeed);
+
+            //Joint/Arm control
+
             if (gamepad2.right_trigger > 0){
                 armTempPos = armTarget + 10;
                 setTargetArm(armTempPos);
@@ -125,26 +146,26 @@ public class mecanumDrive extends LinearOpMode {
                 currentArmState = armState.HOLDING;
             }
 
-            armFSM();
-            slideFSM();
+            //GamePad 1 buttons
 
             if (buttonHandler.isPressedOnceRB_1(gamepad1.right_bumper)) { //change to right bumper
                 if (changeSpeedPos) {
                     changeSpeedPos = false;
-                    changeSpeed = 0.65; //speed is 1
+                    changeSpeed = 0.65; //Normal driving speed
 
-                } else { //speed is halved
-                    changeSpeed = 0.25;
+                } else {
+                    changeSpeed = 0.25; //Slow driving speed
                     changeSpeedPos = true;
                 }
             }
 
-            //gamepad2
-            if (buttonHandler.isPressedOnceB_2(gamepad2.b)) {
-                wristServo.setPosition(0.8);
-            }
+            //GamePad 2 buttons
+
             if (buttonHandler.isPressedOnceA_2(gamepad2.a)) {
                 wristServo.setPosition(0.4);
+            }
+            if (buttonHandler.isPressedOnceB_2(gamepad2.b)) {
+                wristServo.setPosition(0.8);
             }
             if (buttonHandler.isPressedOnceX_2(gamepad2.x)) {
                 wristServo.setPosition(0.1);
@@ -161,15 +182,19 @@ public class mecanumDrive extends LinearOpMode {
             }else {
                 basketServo.setPosition(0.3);
             }
-            telemetry.addData("arm State", currentArmState);
-            telemetry.addData("target ", armTarget);
-            telemetry.addData("time", newTimer.seconds());// tells us the time from when we press start
-            telemetry.addData("jointMotorPos", jointMotor.getCurrentPosition());
-            telemetry.addData("slideMotorPos", slideMotor.getCurrentPosition());
-            telemetry.addData("wristServo", wristServo.getPosition());
-            telemetry.update();
         }
     }
+
+    public void updateTelemetry() {
+        telemetry.addData("arm State", currentArmState);
+        telemetry.addData("target ", armTarget);
+        telemetry.addData("time", newTimer.seconds());
+        telemetry.addData("jointMotorPos", jointMotor.getCurrentPosition());
+        telemetry.addData("slideMotorPos", slideMotor.getCurrentPosition());
+        telemetry.addData("wristServo", wristServo.getPosition());
+        telemetry.update();
+    }
+
     public void setTargetArm(int target){
         armTarget = target;
         currentArmState = armState.MOVING;
@@ -193,6 +218,7 @@ public class mecanumDrive extends LinearOpMode {
                 break;
             case MOVING:
                 moveArm(armTarget);
+                break; //delete this if it doesnt work
         }
     }
     public void slideFSM(){
@@ -240,18 +266,17 @@ public class mecanumDrive extends LinearOpMode {
         }
     }
     public void lightsUpdate(){
-        if (60 > newTimer.seconds()){
+        if (60 > newTimer.seconds()){ // First 60 seconds is green
             lights.setPattern(RevBlinkinLedDriver.BlinkinPattern.GREEN);
-        } else if (90 > newTimer.seconds()){
+        } else if (90 > newTimer.seconds()){ // From 60 to 90 seconds is blue
             lights.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLUE);
-        } else if (105 > newTimer.seconds()){
+        } else if (105 > newTimer.seconds()){ // From 90 to 105 seconds is white
             lights.setPattern(RevBlinkinLedDriver.BlinkinPattern.WHITE);
-        } else if (120 > newTimer.seconds()){
+        } else if (120 > newTimer.seconds()){ // From 105 to 120 seconds is red
             lights.setPattern(RevBlinkinLedDriver.BlinkinPattern.RED);
-        } else if (140 > newTimer.seconds()){
+        } else if (140 > newTimer.seconds()){ // From 120 to 140 seconds is yellow
             lights.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK);
         }
-
     }
 }
 
