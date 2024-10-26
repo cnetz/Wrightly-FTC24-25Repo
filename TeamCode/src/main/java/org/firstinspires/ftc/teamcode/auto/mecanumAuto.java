@@ -13,7 +13,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.teamcode.teleOp.twoWheelDrive;
 
 @Autonomous
 public class mecanumAuto extends OpMode {
@@ -25,18 +24,24 @@ public class mecanumAuto extends OpMode {
     double frontRightDistance = 0;
     double baseSpeed = 0.1;
     double maxSpeed = 0.7;
+
+    //PID Controller
+
     private PIDController armController;
     private PIDController slideController;
-    double armP = 0.004,armI = 0, armD = 0.0002; //adjust P to increase speed maybe'
+    double armP = 0.004,armI = 0, armD = 0.0002;
     double armF = 0.03;
     int armTarget = 0;
     int armThreshold = 10;
-    double armTicksInDegree = 285 / 180;//1425 / 5 = 285
+    double armTicksInDegree = 285 / 180; //1425 / 5 (gear ratio) = 285
     double slideP = 0.006,slideI = 0, slideD = 0.0001;
     double slideF = 0.04;
     int slideTarget = 0;
     int slideThreshold = 10;
     double slideTicksInDegree = 358.466 / 180;
+
+    //Drive conversion
+
     double cpr = 537.7;
     double gearRatio = 1;
     double diameter = 4.1; //4.09449 in inches - mecanum
@@ -47,19 +52,20 @@ public class mecanumAuto extends OpMode {
     double conversion = cpi * bias;
     double robotWidth = 12.9;
     double turnCF = Math.PI * robotWidth;
-    private DcMotorEx jointMotor; // location
-    private DcMotor frontLeftMotor; // location
-    private DcMotor backLeftMotor; // location
-    private DcMotor backRightMotor; // location
-    private DcMotor frontRightMotor; // location
-    private DcMotorEx slideMotor; // location
-    private Servo wristServo;
-    private Servo clawServo;
-    private Servo basketServo;
-    private ElapsedTime newTimer = new ElapsedTime();
+
+    //Motors, servos, etc
+
+    private DcMotorEx jointMotor, slideMotor;
+    private DcMotor frontLeftMotor, backLeftMotor, backRightMotor, frontRightMotor;
+    private Servo wristServo, clawServo, basketServo;
+    private final ElapsedTime newTimer = new ElapsedTime();
+
     IMU imu;
     private boolean fiveSeconds = false;
     private boolean exit = false;
+
+    //States
+
     private enum OrderState{
         FIRST,SECOND,THIRD,FOURTH,FIFTH,SIX,SEVEN,EIGHT,NINE,TEN
     }
@@ -80,10 +86,15 @@ public class mecanumAuto extends OpMode {
         IDLE,MOVING,COMPLETED
     }
     private StrafeState currentStrafeState = StrafeState.IDLE;
+
+    //Current Step
+
+    private int currentStep = 0;
+
     @Override
     public void init() {
-        armController = new PIDController(armP,armI,armD);
-        slideController = new PIDController(slideP,slideI,slideD);
+        armController = new PIDController(armP,armI,armD); //Declares PID Controller for arm/joint
+        slideController = new PIDController(slideP,slideI,slideD); //Declares PID Controller for slide
 
         frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor"); // EXP 2
         backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor"); // EXP 3
@@ -96,6 +107,8 @@ public class mecanumAuto extends OpMode {
         basketServo = hardwareMap.get(Servo.class,"basketServo"); // CON - 4
         imu = hardwareMap.get(IMU.class,"imu");
 
+        //Sets motor power behavior to brake
+
         frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -103,22 +116,26 @@ public class mecanumAuto extends OpMode {
         jointMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        //Sets motor directions
+
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        //Reset and declare motor modes
 
         slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         jointMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         jointMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        //IMU orientation
+
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
-        // Now initialize the IMU with this mounting orientation
-        // Note: if you choose two conflicting directions, this initialization will cause a code exception.
         imu.initialize(new IMU.Parameters(orientationOnRobot));
     }
 
@@ -142,6 +159,16 @@ public class mecanumAuto extends OpMode {
     @Override
     public void loop() {
         updateTelemetry();
+
+        switch(currentStep) {
+            case 0:
+                currentStep = 1;
+                break;
+            case 1:
+                currentStep = 0;
+                break;
+        }
+
         switch(currentOrderState){
             case FIRST:
                 if ((currentDriveState == DriveState.IDLE) && (currentSlideState == SlideState.IDLE)){
@@ -236,18 +263,23 @@ public class mecanumAuto extends OpMode {
 
     public void moveToPos(double inches, double speed) {
         int move = (int)(Math.round(inches * conversion));
-        currentInches = Math.abs(inches);
+/*        currentInches = Math.abs(inches);
         if (currentInches > 5) {
             frontLeftDistance = (frontLeftMotor.getCurrentPosition() + move);
             backLeftDistance = (backLeftMotor.getCurrentPosition() + move);
             backRightDistance = (backRightMotor.getCurrentPosition() + move);
             frontRightDistance = (frontRightMotor.getCurrentPosition() + move);
-        }
+        }*/
 
-        frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //Change to RUN_USING_ENCODER
-        frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() + move);
+        frontRightMotor.setTargetPosition(frontRightMotor.getCurrentPosition() + move);
+        backLeftMotor.setTargetPosition(backLeftMotor.getCurrentPosition() + move);
+        backRightMotor.setTargetPosition(backRightMotor.getCurrentPosition() + move);
+
+        frontLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         frontLeftMotor.setPower(speed);
         frontRightMotor.setPower(speed);
@@ -372,7 +404,7 @@ public class mecanumAuto extends OpMode {
 
             case MOVING:
                 // Continuously calculate and update motor speed to reach the target
-                if (currentInches > 5) {
+/*                if (currentInches > 5) {
                     // Check each motor individually
                     if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < driveTolerance) {
                         // Stop the front left motor if it has reached its target
@@ -419,6 +451,16 @@ public class mecanumAuto extends OpMode {
 
                     // All motors have reached their target; transition to COMPLETED state
                     currentDriveState = DriveState.COMPLETED;
+                }*/
+
+                if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
+                    frontLeftMotor.setPower(0);
+                    frontRightMotor.setPower(0);
+                    backLeftMotor.setPower(0);
+                    backRightMotor.setPower(0);
+
+                    currentDriveState = DriveState.COMPLETED;
+                    break;
                 }
                 break;
 
@@ -436,7 +478,7 @@ public class mecanumAuto extends OpMode {
             case MOVING:
                 // converts inches to cpr for driving forward and back
                 // Check if the slide has reached the target
-                if (currentInches > 5){
+/*                if (currentInches > 5){
                     double frontLeftSpeed = calculateSpeed(frontLeftMotor.getCurrentPosition(), (int) frontLeftDistance);
                     double frontRightSpeed = calculateSpeed(frontRightMotor.getCurrentPosition(), (int) frontRightDistance);
                     double backLeftSpeed = calculateSpeed(backLeftMotor.getCurrentPosition(), (int) backLeftDistance);
@@ -446,7 +488,7 @@ public class mecanumAuto extends OpMode {
                     frontRightMotor.setPower(frontRightSpeed);
                     backLeftMotor.setPower(backLeftSpeed);
                     backRightMotor.setPower(backRightSpeed);
-                }
+                }*/
 
 
                 if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
