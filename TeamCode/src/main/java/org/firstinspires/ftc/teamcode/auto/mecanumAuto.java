@@ -91,6 +91,8 @@ public class mecanumAuto extends OpMode {
 
     private int currentStep = 0;
 
+    private boolean test = false;
+
     @Override
     public void init() {
         armController = new PIDController(armP,armI,armD); //Declares PID Controller for arm/joint
@@ -160,88 +162,176 @@ public class mecanumAuto extends OpMode {
     public void loop() {
         updateTelemetry();
 
-        switch(currentStep) {
-            case 0:
-                if ((currentDriveState == DriveState.IDLE) && (currentSlideState == SlideState.IDLE)){
-                    moveToPos(-10,0.3);
-                    setTargetSlide(2800);
-                }
-                if ((currentDriveState == DriveState.COMPLETED) && (currentSlideState == SlideState.COMPLETED)){
-                    currentDriveState = DriveState.IDLE;
-                    currentSlideState = SlideState.IDLE;
-                    currentStep++;
-                }
-                break;
-            case 1:
-                if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)){
-                    setTargetArm(1400);
-                    strafeToPos(12,0.3);
-                    wristServo.setPosition(0.6);
-                }
-                if ((currentStrafeState == StrafeState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
-                    currentStrafeState = StrafeState.IDLE;
-                    currentArmState = armState.IDLE;
-                    currentStep++;
-                    if (wristServo.getPosition() == 0.6) {
+
+        if(!test) {
+            switch (currentStep) {
+                case 0: //Drive -20 inches and move slide up
+                    if ((currentDriveState == DriveState.IDLE) && (currentSlideState == SlideState.IDLE)) {
+                        moveToPos(-20, 0.4);
+                        setTargetSlide(2800);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED) && (currentSlideState == SlideState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentSlideState = SlideState.IDLE;
                         currentStep++;
                     }
-                }
-                break;
-            case 2:
-                if ((currentDriveState == DriveState.IDLE)){
-                    moveToPos(-21,0.3);
-                }
-                if ((currentDriveState == DriveState.COMPLETED)){
-                    currentDriveState = DriveState.IDLE;
-                    currentStep++;
-                }
-                break;
-            case 3:
-                if ((currentArmState == armState.IDLE)){
-                    setTargetArm(1000);
-                    // wristServo.setPosition(0.6);
-                }
-                if ((currentArmState == armState.COMPLETED)){
-                    currentArmState = armState.IDLE;
-                    clawServo.setPosition(0.6);
-                    if (clawServo.getPosition() == 0.6) {
+                    break;
+                case 1://Strafe 12 inches and move arm and set wrist
+                    if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)) {
+                        setTargetArm(1400);
+                        strafeToPos(12, 0.4);
+                        wristServo.setPosition(0.6);
+                    }
+                    if ((currentStrafeState == StrafeState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                        currentStrafeState = StrafeState.IDLE;
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+                        if (wristServo.getPosition() == 0.6) {
+                            currentStep++;
+                        }
+                    }
+                    break;
+                case 2: //Drive -11 inches to aling to place specimen
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(-11, 0.4);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
                         currentStep++;
                     }
-                }
-                break;
-            case 4:
-                if ((currentDriveState == DriveState.IDLE)){
-                    moveToPos(-6,0.1);
-                }
-                if ((currentDriveState == DriveState.COMPLETED)){
-                    currentDriveState = DriveState.IDLE;
-                    currentStep++;
-                }
-                break;
-            case 5: //Backup Robot
-                if ((currentDriveState == DriveState.IDLE) && (currentArmState == armState.IDLE)){
-                    setTargetArm(1200);
-                    moveToPos(10,0.3);
-                }
-                if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
-                    currentDriveState = DriveState.IDLE;
-                    currentArmState = armState.IDLE;
-                    currentStep++;
-                }
-                break;
-            case 6:
-                if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)){
-                    setTargetArm(2400);
-                    strafeToPos(-41,0.3);
-                }
-                if ((currentStrafeState == StrafeState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
-                    currentStrafeState = StrafeState.IDLE;
-                    currentArmState = armState.IDLE;
-                    currentStep++;
-                }
-                break;
-            case 7:
-                break;
+                    break;
+                case 3: //Move arm to place specimen
+                    if ((currentArmState == armState.IDLE)) {
+                        setTargetArm(1000);
+                    }
+                    if ((currentArmState == armState.COMPLETED)) {
+                        currentArmState = armState.IDLE;
+                        clawServo.setPosition(0.6);
+                        if (clawServo.getPosition() == 0.6) {
+                            currentStep++;
+                        }
+                    }
+                    break;
+                case 4: //Drives -4 to align robot
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(-4, 0.3);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 5: //Drive 10 inches and lift arm
+                    if ((currentDriveState == DriveState.IDLE) && (currentArmState == armState.IDLE)) {
+                        setTargetArm(1200);
+                        moveToPos(12, 0.4);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 6: //Strafe and lift arm (arm all the way up)
+                    if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)) {
+                        setTargetArm(2400);
+                        strafeToPos(-41, 0.6);
+                    }
+                    if ((currentStrafeState == StrafeState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                        currentStrafeState = StrafeState.IDLE;
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 7: //Lower arm + claw to pickup 2nd specimen
+                    if ((currentArmState == armState.IDLE)) {
+                        setTargetArm(4925);
+                        wristServo.setPosition(0.40);
+                    }
+                    if ((currentArmState == armState.COMPLETED)) {
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 8: //Drive forward 2 inches then close claw
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(3, 0.1);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        clawServo.setPosition(0.85);
+                        currentDriveState = DriveState.IDLE;
+                        if(clawServo.getPosition() == 0.85) {
+                            currentStep++;
+                        }
+                    }
+                    break;
+                case 9: //Drive backwards -1 inches and arm will go upwards
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(-1, 0.1);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 10: //Drive back -3 and move arm to up
+                    if ((currentDriveState == DriveState.IDLE) && (currentArmState == armState.IDLE)) {
+                        moveToPos(-3, 0.1);
+                        setTargetArm(2400);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 11: //Strafe 44 inches to place next specimen
+                    if ((currentStrafeState == StrafeState.IDLE)) {
+                        strafeToPos(44, 0.5);
+                        wristServo.setPosition(0.6);
+                    }
+                    if ((currentStrafeState == StrafeState.COMPLETED) ) {
+                        currentStrafeState = StrafeState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 12: //Drive -7 and move arm to place
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(-7, 0.3);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 13:
+                    if ((currentArmState == armState.IDLE)) {
+                        setTargetArm(1000);
+                    }
+                    if ((currentArmState == armState.COMPLETED)) {
+                        currentArmState = armState.IDLE;
+                        clawServo.setPosition(0.6);
+                        if (clawServo.getPosition() == 0.6) {
+                            currentStep++;
+                        }
+                    }
+                    break;
+            }
+        } else { // TESTING
+            switch (currentStep) {
+                case 0:
+                    if ((currentArmState == armState.IDLE)) {
+                        setTargetArm(4950);
+                        wristServo.setPosition(0.45);
+                    }
+                    if ((currentArmState == armState.COMPLETED)) {
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 1:
+                    break;
+            }
         }
         strafeFSM();
         driveFSM();
