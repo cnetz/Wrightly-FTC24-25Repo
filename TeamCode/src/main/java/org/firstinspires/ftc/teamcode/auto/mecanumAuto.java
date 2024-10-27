@@ -162,71 +162,86 @@ public class mecanumAuto extends OpMode {
 
         switch(currentStep) {
             case 0:
-                currentStep = 1;
-                break;
-            case 1:
-                currentStep = 0;
-                break;
-        }
-
-        switch(currentOrderState){
-            case FIRST:
                 if ((currentDriveState == DriveState.IDLE) && (currentSlideState == SlideState.IDLE)){
-                    moveToPos(-40,0.1);
+                    moveToPos(-10,0.3);
                     setTargetSlide(2800);
                 }
                 if ((currentDriveState == DriveState.COMPLETED) && (currentSlideState == SlideState.COMPLETED)){
                     currentDriveState = DriveState.IDLE;
                     currentSlideState = SlideState.IDLE;
-                    currentOrderState = OrderState.SECOND;
+                    currentStep++;
                 }
                 break;
-            case SECOND:
-                if ((currentArmState == armState.IDLE)){
-                    setTargetArm(1500);
+            case 1:
+                if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)){
+                    setTargetArm(1400);
+                    strafeToPos(12,0.3);
                     wristServo.setPosition(0.6);
                 }
-                if ((currentArmState == armState.COMPLETED)){
+                if ((currentStrafeState == StrafeState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                    currentStrafeState = StrafeState.IDLE;
                     currentArmState = armState.IDLE;
+                    currentStep++;
                     if (wristServo.getPosition() == 0.6) {
-                        currentOrderState = OrderState.THIRD;
+                        currentStep++;
                     }
                 }
                 break;
-            case THIRD:
+            case 2:
                 if ((currentDriveState == DriveState.IDLE)){
-                    moveToPos(-10,0.1);
+                    moveToPos(-21,0.3);
                 }
                 if ((currentDriveState == DriveState.COMPLETED)){
                     currentDriveState = DriveState.IDLE;
-                    currentOrderState = OrderState.FOURTH;
+                    currentStep++;
                 }
                 break;
-            case FOURTH:
+            case 3:
                 if ((currentArmState == armState.IDLE)){
-                    setTargetArm(1100);
+                    setTargetArm(1000);
                     // wristServo.setPosition(0.6);
                 }
                 if ((currentArmState == armState.COMPLETED)){
                     currentArmState = armState.IDLE;
-                    currentOrderState = OrderState.FIFTH;
-
+                    clawServo.setPosition(0.6);
+                    if (clawServo.getPosition() == 0.6) {
+                        currentStep++;
+                    }
                 }
                 break;
-            case FIFTH:
-                clawServo.setPosition(0.6);
+            case 4:
+                if ((currentDriveState == DriveState.IDLE)){
+                    moveToPos(-6,0.1);
+                }
+                if ((currentDriveState == DriveState.COMPLETED)){
+                    currentDriveState = DriveState.IDLE;
+                    currentStep++;
+                }
                 break;
-            case SIX:
+            case 5: //Backup Robot
+                if ((currentDriveState == DriveState.IDLE) && (currentArmState == armState.IDLE)){
+                    setTargetArm(1200);
+                    moveToPos(10,0.3);
+                }
+                if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                    currentDriveState = DriveState.IDLE;
+                    currentArmState = armState.IDLE;
+                    currentStep++;
+                }
                 break;
-            case SEVEN:
+            case 6:
+                if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)){
+                    setTargetArm(2400);
+                    strafeToPos(-41,0.3);
+                }
+                if ((currentStrafeState == StrafeState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                    currentStrafeState = StrafeState.IDLE;
+                    currentArmState = armState.IDLE;
+                    currentStep++;
+                }
                 break;
-            case EIGHT:
+            case 7:
                 break;
-            case NINE:
-                break;
-            case TEN:
-                break;
-
         }
         strafeFSM();
         driveFSM();
@@ -291,13 +306,14 @@ public class mecanumAuto extends OpMode {
     }
     public void strafeToPos(double inches, double speed) {
         int move = (int)(Math.round(inches * conversion));
-        currentInches = Math.abs(inches);
+
+/*        currentInches = Math.abs(inches);
         if (currentInches > 5) {
             frontLeftDistance = (frontLeftMotor.getCurrentPosition() + move);
             backLeftDistance = (backLeftMotor.getCurrentPosition() - move);
             backRightDistance = (backRightMotor.getCurrentPosition() + move);
             frontRightDistance = (frontRightMotor.getCurrentPosition() - move);
-        }
+        }*/
 
         frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() + move);
         frontRightMotor.setTargetPosition(frontRightMotor.getCurrentPosition() - move);
@@ -493,18 +509,18 @@ public class mecanumAuto extends OpMode {
 
                 if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
                     // If it's done moving, transition to COMPLETED state
-                    currentInches = 0;
+/*                    currentInches = 0;
                     frontLeftDistance = 0;
                     backLeftDistance = 0;
                     backRightDistance = 0;
-                    frontRightDistance = 0;
+                    frontRightDistance = 0;*/
 
                     frontLeftMotor.setPower(0);
                     frontRightMotor.setPower(0);
                     backLeftMotor.setPower(0);
                     backRightMotor.setPower(0);
 
-                    currentDriveState = DriveState.COMPLETED;
+                    currentStrafeState = StrafeState.COMPLETED;
                     break;
                 }
                 break;
