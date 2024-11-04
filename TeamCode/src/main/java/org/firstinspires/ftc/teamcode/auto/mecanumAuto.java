@@ -37,7 +37,7 @@ public class mecanumAuto extends OpMode {
     double slideP = 0.006,slideI = 0, slideD = 0.0001;
     double slideF = 0.04;
     int slideTarget = 0;
-    int slideThreshold = 10;
+    int slideThreshold = 50;
     double slideTicksInDegree = 358.466 / 180;
 
     //Drive conversion
