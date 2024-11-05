@@ -178,8 +178,8 @@ public class mecanumAuto extends OpMode {
                     break;
                 case 1://Strafe 12 inches and move arm and set wrist
                     if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)) {
-                        setTargetArm(1400);
-                        strafeToPos(12, 0.4);
+                        setTargetArm(2400);
+                        strafeToPos(0, 0.4);
                         wristServo.setPosition(0.6);
                     }
                     if ((currentStrafeState == StrafeState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
@@ -191,16 +191,25 @@ public class mecanumAuto extends OpMode {
                         }
                     }
                     break;
-                case 2: //Drive -11 inches to aling to place specimen
+                case 2: //Drive -11 inches to aline to place specimen
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-11, 0.4);
+                        moveToPos(-15, 0.3);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
                         currentStep++;
                     }
                     break;
-                case 3: //Move arm to place specimen
+                case 3: //Drives -4 to align robot
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(1.5, 0.3);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 4: //Move arm to place specimen
                     if ((currentArmState == armState.IDLE)) {
                         setTargetArm(1000);
                     }
@@ -212,19 +221,10 @@ public class mecanumAuto extends OpMode {
                         }
                     }
                     break;
-                case 4: //Drives -4 to align robot
-                    if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-4, 0.3);
-                    }
-                    if ((currentDriveState == DriveState.COMPLETED)) {
-                        currentDriveState = DriveState.IDLE;
-                        currentStep++;
-                    }
-                    break;
                 case 5: //Drive 10 inches and lift arm
                     if ((currentDriveState == DriveState.IDLE) && (currentArmState == armState.IDLE)) {
                         setTargetArm(1200);
-                        moveToPos(12, 0.4);
+                        moveToPos(4, 0.4);
                     }
                     if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
@@ -232,10 +232,10 @@ public class mecanumAuto extends OpMode {
                         currentStep++;
                     }
                     break;
-                case 6: //Strafe and lift arm (arm all the way up)
+                case 6: // BIG Strafe and lift arm (arm all the way up)
                     if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)) {
                         setTargetArm(2400);
-                        strafeToPos(-41, 0.6);
+                        strafeToPos(-48, 0.6);
                     }
                     if ((currentStrafeState == StrafeState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
                         currentStrafeState = StrafeState.IDLE;
@@ -255,7 +255,7 @@ public class mecanumAuto extends OpMode {
                     break;
                 case 8: //Drive forward 2 inches then close claw
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(3, 0.1);
+                        moveToPos(8, 0.1);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         clawServo.setPosition(0.85);
@@ -267,7 +267,7 @@ public class mecanumAuto extends OpMode {
                     break;
                 case 9: //Drive backwards -1 inches and arm will go upwards
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-1, 0.1);
+                        moveToPos(-4, 0.1);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
@@ -297,7 +297,7 @@ public class mecanumAuto extends OpMode {
                     break;
                 case 12: //Drive -7 and move arm to place
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-7, 0.3);
+                        moveToPos(-5, 0.3);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
