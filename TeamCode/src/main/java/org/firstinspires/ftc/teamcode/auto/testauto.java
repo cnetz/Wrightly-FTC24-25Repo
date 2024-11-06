@@ -16,7 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @Autonomous
 public class testauto extends OpMode {
-    double driveTolerance = 50;
+    double driveTolerance = 75;
     double currentInches = 0;
     double frontLeftDistance = 0;
     double backLeftDistance = 0;
@@ -32,12 +32,12 @@ public class testauto extends OpMode {
     double armP = 0.004,armI = 0, armD = 0.0002;
     double armF = 0.03;
     int armTarget = 0;
-    int armThreshold = 25;
+    int armThreshold = 50;
     double armTicksInDegree = 285 / 180; //1425 / 5 (gear ratio) = 285
     double slideP = 0.006,slideI = 0, slideD = 0.0001;
     double slideF = 0.04;
     int slideTarget = 0;
-    int slideThreshold = 50;
+    int slideThreshold = 100;
     double slideTicksInDegree = 358.466 / 180;
 
     //Drive conversion
@@ -177,13 +177,11 @@ public class testauto extends OpMode {
                     }
                     break;
                 case 1://set claw and arm
-                    if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)) {
+                    if ((currentArmState == armState.IDLE)) {
                         setTargetArm(1900);
-                        strafeToPos(0, 0.4);
                         wristServo.setPosition(0.6);
                     }
-                    if ((currentStrafeState == StrafeState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
-                        currentStrafeState = StrafeState.IDLE;
+                    if ((currentArmState == armState.COMPLETED)) {
                         currentArmState = armState.IDLE;
                         currentStep++;
                         if (wristServo.getPosition() == 0.6) {
@@ -193,7 +191,7 @@ public class testauto extends OpMode {
                     break;
                 case 2: //Drive -15 inches to aline to place specimen
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-15, 0.3);
+                        moveToPos(-14, 0.3);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
@@ -224,10 +222,8 @@ public class testauto extends OpMode {
                     }
                     if ((currentArmState == armState.COMPLETED)) {
                         currentArmState = armState.IDLE;
-                        clawServo.setPosition(0.6);
-                        if (clawServo.getPosition() == 0.6) {
+                        clawServo.setPosition(0.5);
                             currentStep++;
-                        }
                     }
                     break;
                 case 6: //Drive 4 inches and lift arm
@@ -243,7 +239,7 @@ public class testauto extends OpMode {
                 case 7: //Drive 4 inches and lift arm
                     if ((currentDriveState == DriveState.IDLE)) {
                         wristServo.setPosition(0.6);
-                        moveToPos(-8, 0.4);
+                        moveToPos(-0, 0.4);
                     }
                     if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
@@ -251,7 +247,7 @@ public class testauto extends OpMode {
                     }
                 case 8: //Drives 1.5 to to place speciman
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(5.5, 0.4);
+                        moveToPos(0, 0.4);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
@@ -261,7 +257,7 @@ public class testauto extends OpMode {
                 case 9: // BIG Strafe and lift arm (arm all the way up)
                     if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)) {
                         setTargetArm(2400);
-                        strafeToPos(-48, 0.6);
+                        strafeToPos(-44, 0.5);
                     }
                     if ((currentStrafeState == StrafeState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
                         currentStrafeState = StrafeState.IDLE;
@@ -271,8 +267,8 @@ public class testauto extends OpMode {
                     break;
                 case 10: //Lower arm + claw to pickup 2nd specimen
                     if ((currentArmState == armState.IDLE)) {
-                        setTargetArm(4925);
-                        wristServo.setPosition(0.40);
+                        setTargetArm(5000);
+                        wristServo.setPosition(0.4);
                     }
                     if ((currentArmState == armState.COMPLETED)) {
                         currentArmState = armState.IDLE;
@@ -281,14 +277,12 @@ public class testauto extends OpMode {
                     break;
                 case 11: //Drive forward 8 inches then close claw
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(8, 0.1);
+                        moveToPos(8, 0.2);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
-                        clawServo.setPosition(0.85);
                         currentDriveState = DriveState.IDLE;
-                        if(clawServo.getPosition() == 0.85) {
+                        clawServo.setPosition(0.85);
                             currentStep++;
-                        }
                     }
                     break;
                 case 12: //Drive backwards -4 inches
@@ -314,7 +308,7 @@ public class testauto extends OpMode {
                     break;
                 case 14: //Strafe 44 inches to place next specimen
                     if ((currentStrafeState == StrafeState.IDLE)) {
-                        strafeToPos(44, 0.5);
+                        strafeToPos(38, 0.6);
                         wristServo.setPosition(0.6);
                     }
                     if ((currentStrafeState == StrafeState.COMPLETED) ) {
@@ -333,16 +327,16 @@ public class testauto extends OpMode {
                     break;
                 case 16:// set arm and claw to place
                     if ((currentDriveState == DriveState.IDLE) && (currentArmState == armState.IDLE)) {
-                        setTargetArm(1900);
-                        moveToPos(0.5, 0.1);
+                        setTargetArm(1825);
+                        moveToPos(1, 0.1);
+                        wristServo.setPosition(0.3);
                     }
                     if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                        wristServo.setPosition(0.3);
                         currentArmState = armState.IDLE;
                         currentDriveState = DriveState.IDLE;
-                        wristServo.setPosition(0.3);
-                        if (wristServo.getPosition() == 0.3) {
                             currentStep++;
-                        }
+
                     }
                     break;
                 case 17:
@@ -351,6 +345,7 @@ public class testauto extends OpMode {
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
+                        clawServo.setPosition(0.6);
                         currentStep++;
                     }
             }
