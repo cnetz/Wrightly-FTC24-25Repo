@@ -1,0 +1,686 @@
+package org.firstinspires.ftc.teamcode.auto;
+
+import com.arcrobotics.ftclib.controller.PIDController;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+
+@Autonomous
+public class testauto extends OpMode {
+    double driveTolerance = 50;
+    double currentInches = 0;
+    double frontLeftDistance = 0;
+    double backLeftDistance = 0;
+    double backRightDistance = 0;
+    double frontRightDistance = 0;
+    double baseSpeed = 0.1;
+    double maxSpeed = 0.7;
+
+    //PID Controller
+
+    private PIDController armController;
+    private PIDController slideController;
+    double armP = 0.004,armI = 0, armD = 0.0002;
+    double armF = 0.03;
+    int armTarget = 0;
+    int armThreshold = 25;
+    double armTicksInDegree = 285 / 180; //1425 / 5 (gear ratio) = 285
+    double slideP = 0.006,slideI = 0, slideD = 0.0001;
+    double slideF = 0.04;
+    int slideTarget = 0;
+    int slideThreshold = 50;
+    double slideTicksInDegree = 358.466 / 180;
+
+    //Drive conversion
+
+    double cpr = 537.7;
+    double gearRatio = 1;
+    double diameter = 4.1; //4.09449 in inches - mecanum
+    double slideDiameter = 1.5;
+    double cpi = (cpr * gearRatio)/(Math.PI * diameter);
+    double cpiSlide = (cpr * gearRatio)/(Math.PI * slideDiameter);
+    double bias = 1.0;
+    double conversion = cpi * bias;
+    double robotWidth = 12.9;
+    double turnCF = Math.PI * robotWidth;
+
+    //Motors, servos, etc
+
+    private DcMotorEx jointMotor, slideMotor;
+    private DcMotor frontLeftMotor, backLeftMotor, backRightMotor, frontRightMotor;
+    private Servo wristServo, clawServo, basketServo;
+    private final ElapsedTime newTimer = new ElapsedTime();
+
+    IMU imu;
+    private boolean fiveSeconds = false;
+    private boolean exit = false;
+
+    //States
+
+    private enum OrderState{
+        FIRST,SECOND,THIRD,FOURTH,FIFTH,SIX,SEVEN,EIGHT,NINE,TEN
+    }
+    private OrderState currentOrderState = OrderState.FIRST;
+    private enum SlideState{
+        IDLE,MOVING,COMPLETED
+    }
+    private SlideState currentSlideState = SlideState.IDLE;
+    private enum DriveState{
+        IDLE,MOVING,COMPLETED
+    }
+    private DriveState currentDriveState = DriveState.IDLE;
+    private enum armState{
+        IDLE, COMPLETED,MOVING//same as completed
+    }
+    private armState currentArmState = armState.IDLE;
+    private enum StrafeState{
+        IDLE,MOVING,COMPLETED
+    }
+    private StrafeState currentStrafeState = StrafeState.IDLE;
+
+    //Current Step
+
+    private int currentStep = 0;
+
+    private boolean test = false;
+
+    @Override
+    public void init() {
+        armController = new PIDController(armP,armI,armD); //Declares PID Controller for arm/joint
+        slideController = new PIDController(slideP,slideI,slideD); //Declares PID Controller for slide
+
+        frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor"); // EXP 2
+        backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor"); // EXP 3
+        backLeftMotor = hardwareMap.get(DcMotor.class, "backLeftMotor"); // EXP 0
+        frontLeftMotor = hardwareMap.get(DcMotor.class, "frontLeftMotor"); // EXP 1
+        jointMotor = hardwareMap.get(DcMotorEx.class, "jointMotor"); // CON - 3
+        slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor"); // CON - 0
+        wristServo = hardwareMap.get(Servo.class,"wristServo"); // CON - 0
+        clawServo = hardwareMap.get(Servo.class,"clawServo"); // EXP - 5
+        basketServo = hardwareMap.get(Servo.class,"basketServo"); // CON - 4
+        imu = hardwareMap.get(IMU.class,"imu");
+
+        //Sets motor power behavior to brake
+
+        frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        jointMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        //Sets motor directions
+
+        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        //Reset and declare motor modes
+
+        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        jointMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        jointMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        //IMU orientation
+
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
+    }
+
+    public void init_loop() {
+        if (gamepad1.y) {
+            telemetry.addData("Yaw", "Resetting\n");
+            imu.resetYaw();
+        } else {
+            telemetry.addData("Yaw", "Press Y (triangle) on Gamepad to reset\n");
+        }
+        updateTelemetry();
+    }
+
+    @Override
+    public void start() {
+        clawServo.setPosition(0.85);
+        basketServo.setPosition(0.3);
+        newTimer.reset();
+    }
+
+    @Override
+    public void loop() {
+        updateTelemetry();
+
+
+        if(!test) {
+            switch (currentStep) {
+                case 0: //Drive -20 inches and move slide up
+                    if ((currentDriveState == DriveState.IDLE) && (currentSlideState == SlideState.IDLE)) {
+                        moveToPos(-20, 0.4);
+                        setTargetSlide(2800);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED) && (currentSlideState == SlideState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentSlideState = SlideState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 1://set claw and arm
+                    if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)) {
+                        setTargetArm(1900);
+                        strafeToPos(0, 0.4);
+                        wristServo.setPosition(0.6);
+                    }
+                    if ((currentStrafeState == StrafeState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                        currentStrafeState = StrafeState.IDLE;
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+                        if (wristServo.getPosition() == 0.6) {
+                            currentStep++;
+                        }
+                    }
+                    break;
+                case 2: //Drive -15 inches to aline to place specimen
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(-15, 0.3);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
+                case 3: //Drives 1.5 to to place speciman
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(0.5, 0.1);
+                        wristServo.setPosition(0.3);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 4: //Drives 1.5 to to place speciman
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(6, 0.4);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 5: //Move arm to place specimen
+                    if ((currentArmState == armState.IDLE)) {
+                        setTargetArm(1900);
+                    }
+                    if ((currentArmState == armState.COMPLETED)) {
+                        currentArmState = armState.IDLE;
+                        clawServo.setPosition(0.6);
+                        if (clawServo.getPosition() == 0.6) {
+                            currentStep++;
+                        }
+                    }
+                    break;
+                case 6: //Drive 4 inches and lift arm
+                    if ((currentDriveState == DriveState.IDLE) && (currentArmState == armState.IDLE)) {
+                        setTargetArm(1900);
+                        moveToPos(0, 0.4);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+                    }
+                case 7: //Drive 4 inches and lift arm
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        wristServo.setPosition(0.6);
+                        moveToPos(-8, 0.4);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
+                case 8: //Drives 1.5 to to place speciman
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(5.5, 0.4);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 9: // BIG Strafe and lift arm (arm all the way up)
+                    if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)) {
+                        setTargetArm(2400);
+                        strafeToPos(-48, 0.6);
+                    }
+                    if ((currentStrafeState == StrafeState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                        currentStrafeState = StrafeState.IDLE;
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 10: //Lower arm + claw to pickup 2nd specimen
+                    if ((currentArmState == armState.IDLE)) {
+                        setTargetArm(4925);
+                        wristServo.setPosition(0.40);
+                    }
+                    if ((currentArmState == armState.COMPLETED)) {
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 11: //Drive forward 8 inches then close claw
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(8, 0.1);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        clawServo.setPosition(0.85);
+                        currentDriveState = DriveState.IDLE;
+                        if(clawServo.getPosition() == 0.85) {
+                            currentStep++;
+                        }
+                    }
+                    break;
+                case 12: //Drive backwards -4 inches
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(-4, 0.1);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 13: //Drive back -3 and move arm to up
+                    if ((currentDriveState == DriveState.IDLE) && (currentArmState == armState.IDLE)) {
+                        moveToPos(-3, 0.1);
+                        setTargetArm(1900);
+                        wristServo.setPosition(0.6);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 14: //Strafe 44 inches to place next specimen
+                    if ((currentStrafeState == StrafeState.IDLE)) {
+                        strafeToPos(44, 0.5);
+                        wristServo.setPosition(0.6);
+                    }
+                    if ((currentStrafeState == StrafeState.COMPLETED) ) {
+                        currentStrafeState = StrafeState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 15: //Drive -5 and move arm to place
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(-8, 0.3);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 16:// set arm and claw to place
+                    if ((currentDriveState == DriveState.IDLE) && (currentArmState == armState.IDLE)) {
+                        setTargetArm(1900);
+                        moveToPos(0.5, 0.1);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
+                        currentArmState = armState.IDLE;
+                        currentDriveState = DriveState.IDLE;
+                        wristServo.setPosition(0.3);
+                        if (wristServo.getPosition() == 0.3) {
+                            currentStep++;
+                        }
+                    }
+                    break;
+                case 17:
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(6, 0.4);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
+            }
+        } else { // TESTING
+            switch (currentStep) {
+                case 0:
+                    if ((currentArmState == armState.IDLE)) {
+                        setTargetArm(4950);
+                        wristServo.setPosition(0.45);
+                    }
+                    if ((currentArmState == armState.COMPLETED)) {
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+                    }
+                    break;
+                case 1:
+                    break;
+            }
+        }
+        strafeFSM();
+        driveFSM();
+        armFSM();
+        slideFSM();
+    }
+    @Override
+    public void stop() {
+        exit = true;
+    }
+
+    public void updateTelemetry(){
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+
+        telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+        telemetry.addData("time", newTimer.seconds());
+        telemetry.addData("inches", currentInches);
+        telemetry.addData("frontLeftDistance", frontLeftDistance);
+        telemetry.addData("frontLeftPower", frontLeftMotor.getPower());
+        telemetry.addData("frontLeftPos", frontLeftMotor.getCurrentPosition());
+/*        telemetry.addData("frontRight", frontRightMotor.getCurrentPosition());
+        telemetry.addData("backLeft", backLeftMotor.getCurrentPosition());
+        telemetry.addData("backRight", backRightMotor.getCurrentPosition());
+        telemetry.addData("DriveState", currentDriveState);
+        telemetry.addData("SlideState", currentSlideState);
+        telemetry.addData("ArmState", currentArmState);
+        telemetry.addData("armTarget", armTarget);
+        telemetry.addData("jointPos", jointMotor.getCurrentPosition());
+        telemetry.addData("slideTarget", slideTarget);
+        telemetry.addData("slidePos", slideMotor.getCurrentPosition());
+        telemetry.addData("jointPower", jointMotor.getPower());*/
+        telemetry.update();
+    }
+
+    public void moveToPos(double inches, double speed) {
+        int move = (int)(Math.round(inches * conversion));
+/*        currentInches = Math.abs(inches);
+        if (currentInches > 5) {
+            frontLeftDistance = (frontLeftMotor.getCurrentPosition() + move);
+            backLeftDistance = (backLeftMotor.getCurrentPosition() + move);
+            backRightDistance = (backRightMotor.getCurrentPosition() + move);
+            frontRightDistance = (frontRightMotor.getCurrentPosition() + move);
+        }*/
+
+        frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() + move);
+        frontRightMotor.setTargetPosition(frontRightMotor.getCurrentPosition() + move);
+        backLeftMotor.setTargetPosition(backLeftMotor.getCurrentPosition() + move);
+        backRightMotor.setTargetPosition(backRightMotor.getCurrentPosition() + move);
+
+        frontLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        frontLeftMotor.setPower(speed);
+        frontRightMotor.setPower(speed);
+        backLeftMotor.setPower(speed);
+        backRightMotor.setPower(speed);
+
+        currentDriveState = DriveState.MOVING;
+
+    }
+    public void strafeToPos(double inches, double speed) {
+        int move = (int)(Math.round(inches * conversion));
+
+/*        currentInches = Math.abs(inches);
+        if (currentInches > 5) {
+            frontLeftDistance = (frontLeftMotor.getCurrentPosition() + move);
+            backLeftDistance = (backLeftMotor.getCurrentPosition() - move);
+            backRightDistance = (backRightMotor.getCurrentPosition() + move);
+            frontRightDistance = (frontRightMotor.getCurrentPosition() - move);
+        }*/
+
+        frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() + move);
+        frontRightMotor.setTargetPosition(frontRightMotor.getCurrentPosition() - move);
+        backLeftMotor.setTargetPosition(backLeftMotor.getCurrentPosition() - move);
+        backRightMotor.setTargetPosition(backRightMotor.getCurrentPosition() + move);
+
+        frontLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        frontLeftMotor.setPower(speed);
+        frontRightMotor.setPower(speed);
+        backLeftMotor.setPower(speed);
+        backRightMotor.setPower(speed);
+
+        currentStrafeState = StrafeState.MOVING;
+
+    }
+    public void moveSlideNormal(double inches, double speed){
+        int move = (int)(Math.round(inches * cpiSlide));
+        slideMotor.setTargetPosition(slideMotor.getCurrentPosition() + move);
+
+        slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        slideMotor.setPower(speed);
+        currentSlideState = SlideState.MOVING;
+
+    }
+    public void moveJoint(double inches, double speed) {
+        int move = (int) (Math.round(inches * cpiSlide * 3));
+        jointMotor.setTargetPosition(move);
+
+        jointMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        jointMotor.setPower(speed);
+    }
+    public void setTargetArm(int target){
+        armTarget = target;
+        currentArmState = armState.MOVING;
+    }
+    public void moveArm(int target){
+        armController.setPID(armP,armI,armD);
+        int jointPos = jointMotor.getCurrentPosition();
+        double pid = armController.calculate(jointPos,target);
+        double ff = Math.cos(Math.toRadians(target / armTicksInDegree)) * armF;
+        double power = pid + ff;
+        jointMotor.setPower(power);
+    }
+    public void armFSM(){
+        switch (currentArmState){
+            case IDLE:
+                int currentPos1 = jointMotor.getCurrentPosition();
+                moveArm(currentPos1);
+                break;
+            case COMPLETED:
+                moveArm(armTarget);
+                break;
+            case MOVING:
+                moveArm(armTarget);
+                double currentPos2 = jointMotor.getCurrentPosition();
+
+                if (Math.abs((armTarget - currentPos2)) < armThreshold){
+                    currentArmState = armState.COMPLETED;
+                }
+
+        }
+    }
+    public void setTargetSlide(int target){
+        slideTarget = target;
+        currentSlideState = SlideState.MOVING;
+    }
+    public void moveSlide(int target){
+        slideController.setPID(slideP,slideI,slideD);
+        int slidePos = slideMotor.getCurrentPosition();
+        double pid = slideController.calculate(slidePos,target);
+        double ff = Math.cos(Math.toRadians(target / slideTicksInDegree)) * slideF;
+        double power = pid + ff;
+        slideMotor.setPower(power);
+    }
+    public void slideFSM(){
+        switch (currentSlideState){
+            case IDLE:
+                int currentPos1 = slideMotor.getCurrentPosition();
+                moveSlide(currentPos1);
+                break;
+            case COMPLETED:
+                moveSlide(slideTarget);
+                break;
+            case MOVING:
+                moveSlide(slideTarget);
+                double currentPos2 = slideMotor.getCurrentPosition();
+
+                if (Math.abs((slideTarget - currentPos2)) < slideThreshold){
+                    currentSlideState = SlideState.COMPLETED;
+                }
+        }
+    }
+
+    public void driveFSM(){
+        switch (currentDriveState){
+            case IDLE:
+                break;
+
+            case MOVING:
+                // Continuously calculate and update motor speed to reach the target
+/*                if (currentInches > 5) {
+                    // Check each motor individually
+                    if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < driveTolerance) {
+                        // Stop the front left motor if it has reached its target
+                        frontLeftMotor.setPower(0);
+                    } else {
+                        // Calculate and set power if still moving
+                        double frontLeftSpeed = calculateSpeed(frontLeftMotor.getCurrentPosition(), (int) frontLeftDistance);
+                        frontLeftMotor.setPower(frontLeftSpeed);
+                    }
+
+                    if (Math.abs(frontRightMotor.getCurrentPosition() - frontRightDistance) < driveTolerance) {
+                        // Stop the front right motor if it has reached its target
+                        frontRightMotor.setPower(0);
+                    } else {
+                        // Calculate and set power if still moving
+                        double frontRightSpeed = calculateSpeed(frontRightMotor.getCurrentPosition(), (int) frontRightDistance);
+                        frontRightMotor.setPower(frontRightSpeed);
+                    }
+
+                    if (Math.abs(backLeftMotor.getCurrentPosition() - backLeftDistance) < driveTolerance) {
+                        // Stop the back left motor if it has reached its target
+                        backLeftMotor.setPower(0);
+                    } else {
+                        // Calculate and set power if still moving
+                        double backLeftSpeed = calculateSpeed(backLeftMotor.getCurrentPosition(), (int) backLeftDistance);
+                        backLeftMotor.setPower(backLeftSpeed);
+                    }
+
+                    if (Math.abs(backRightMotor.getCurrentPosition() - backRightDistance) < driveTolerance) {
+                        // Stop the back right motor if it has reached its target
+                        backRightMotor.setPower(0);
+                    } else {
+                        // Calculate and set power if still moving
+                        double backRightSpeed = calculateSpeed(backRightMotor.getCurrentPosition(), (int) backRightDistance);
+                        backRightMotor.setPower(backRightSpeed);
+                    }
+                }
+
+                // Check if all motors have reached the target positions within some tolerance
+                if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < driveTolerance &&
+                        Math.abs(frontRightMotor.getCurrentPosition() - frontRightDistance) < driveTolerance &&
+                        Math.abs(backLeftMotor.getCurrentPosition() - backLeftDistance) < driveTolerance &&
+                        Math.abs(backRightMotor.getCurrentPosition() - backRightDistance) < driveTolerance) {
+
+                    // All motors have reached their target; transition to COMPLETED state
+                    currentDriveState = DriveState.COMPLETED;
+                }*/
+
+                if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
+                    frontLeftMotor.setPower(0);
+                    frontRightMotor.setPower(0);
+                    backLeftMotor.setPower(0);
+                    backRightMotor.setPower(0);
+
+                    currentDriveState = DriveState.COMPLETED;
+                    break;
+                }
+                break;
+
+            case COMPLETED:
+                // Now transition back to IDLE for future movement
+                break;
+        }
+
+    }
+    public void strafeFSM() {
+        switch (currentStrafeState) {
+            case IDLE:
+                break;
+
+            case MOVING:
+                // converts inches to cpr for driving forward and back
+                // Check if the slide has reached the target
+/*                if (currentInches > 5){
+                    double frontLeftSpeed = calculateSpeed(frontLeftMotor.getCurrentPosition(), (int) frontLeftDistance);
+                    double frontRightSpeed = calculateSpeed(frontRightMotor.getCurrentPosition(), (int) frontRightDistance);
+                    double backLeftSpeed = calculateSpeed(backLeftMotor.getCurrentPosition(), (int) backLeftDistance);
+                    double backRightSpeed = calculateSpeed(backRightMotor.getCurrentPosition(), (int) backRightDistance);
+
+                    frontLeftMotor.setPower(frontLeftSpeed);
+                    frontRightMotor.setPower(frontRightSpeed);
+                    backLeftMotor.setPower(backLeftSpeed);
+                    backRightMotor.setPower(backRightSpeed);
+                }*/
+
+
+                if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
+                    // If it's done moving, transition to COMPLETED state
+/*                    currentInches = 0;
+                    frontLeftDistance = 0;
+                    backLeftDistance = 0;
+                    backRightDistance = 0;
+                    frontRightDistance = 0;*/
+
+                    frontLeftMotor.setPower(0);
+                    frontRightMotor.setPower(0);
+                    backLeftMotor.setPower(0);
+                    backRightMotor.setPower(0);
+
+                    currentStrafeState = StrafeState.COMPLETED;
+                    break;
+                }
+                break;
+
+            case COMPLETED:
+                // Now transition back to IDLE for future movement
+                break;
+        }
+    }
+    //private double calculateSinusoidalSpeed(int currentDistance, int totalDistance)
+    //fractionTraveled = (double) currentDistance / totalDistance;
+    //speed = baseSpeed + (maxSpeed - baseSpeed) * Math.sin(Math.PI * fractionTraveled);
+    //return speed;
+
+    //private double applyAccelerationControl(double currentSpeed, double targetSpeed, double maxAcceleration)
+    // speedDifference = targetSpeed - currentSpeed
+    // if(speedDifference > maxAcceleration) {
+    // currentSpeed += maxAcceleration
+    // } else if (speedDifference < -maxAcceleration) {
+    // currentSpeed -= maxAcceleration
+    // } else {
+    // currentSpeed = targetSpeed;
+    // }
+    // return currentSpeed;
+
+    private double calculateSpeed(int currentDistance, int totalDistance){
+        int distanceRemaining = Math.abs(totalDistance - currentDistance);
+        int totalTravelDistance = Math.abs(totalDistance);
+
+        double traveled = 1.0 - (double)(distanceRemaining / totalTravelDistance);
+        traveled = Math.max(1, Math.max(0, traveled));
+
+        return (baseSpeed + (maxSpeed - baseSpeed) * Math.sin(Math.PI * traveled));
+    }
+}
+
