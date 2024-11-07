@@ -298,26 +298,37 @@ public class rotatetestauto extends OpMode {
                     }
                     break;
                 case 12: //Drive -5 and move arm to place
-                    if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-5, 0.3);
+                    if ((currentSlideState == SlideState.IDLE)) {
+                        setTargetSlide(3300);
                     }
-                    if ((currentDriveState == DriveState.COMPLETED)) {
-                        currentDriveState = DriveState.IDLE;
+                    if ((currentSlideState == SlideState.COMPLETED)) {
+                        currentSlideState = SlideState.IDLE;
                         currentStep++;
                     }
                     break;
                 case 13:// set arm and claw to place
-                    if ((currentArmState == armState.IDLE)) {
-                        setTargetArm(1000);
+                    if ((currentStrafeState == StrafeState.IDLE)) {
+                        strafeToPos(-5, 0.2);
                     }
-                    if ((currentArmState == armState.COMPLETED)) {
-                        currentArmState = armState.IDLE;
-                        clawServo.setPosition(0.6);
-                        if (clawServo.getPosition() == 0.6) {
+                    if ((currentStrafeState == StrafeState.COMPLETED)) {
+                        currentStrafeState = StrafeState.IDLE;
                             currentStep++;
-                        }
+                    }
+
+
+                    break;
+                case 14:
+                    if ((currentDriveState == DriveState.IDLE)){
+                            moveToPos(-5, 0.2);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)){
+                            currentDriveState = DriveState.IDLE;
+                            basketServo.setPosition(0.7);
                     }
                     break;
+                case 15:
+                    break;
+
             }
         } else { // TESTING
             switch (currentStep) {
