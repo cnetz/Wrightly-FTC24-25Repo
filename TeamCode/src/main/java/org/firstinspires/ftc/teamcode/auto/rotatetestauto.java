@@ -188,7 +188,7 @@ public class rotatetestauto extends OpMode {
                     break;
                 case 2: //Drive -15 inches to aline to place specimen
                     if ((currentArmState == armState.IDLE)) {
-                        setTargetArm(2400);
+                        setTargetArm(2300);
                         wristServo.setPosition(0.4);
                     }
                     if ((currentArmState == armState.COMPLETED)) {
@@ -198,8 +198,8 @@ public class rotatetestauto extends OpMode {
                     break;
                 case 3: //Drives 1.5 to to place speciman
                     if ((currentStrafeState == StrafeState.IDLE) && (currentSlideState == SlideState.IDLE)) {
-                        strafeToPos(-8, 0.2);
-                        setTargetSlide(3400);
+                        strafeToPos(-9, 0.2);
+                        setTargetSlide(3300);
                     }
                     if ((currentStrafeState == StrafeState.COMPLETED) && (currentSlideState == SlideState.COMPLETED)) {
                         currentStrafeState = StrafeState.IDLE;
@@ -209,7 +209,7 @@ public class rotatetestauto extends OpMode {
                     break;
                 case 4: //Move arm to place specimen
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-4, 0.2);
+                        moveToPos(-5, 0.2);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
@@ -221,7 +221,7 @@ public class rotatetestauto extends OpMode {
                     break;
                 case 5: //Drive 4 inches and lift arm
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(6, 0.3);
+                        moveToPos(7, 0.3);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
@@ -230,8 +230,8 @@ public class rotatetestauto extends OpMode {
                     break;
                 case 6: // BIG Strafe and lift arm (arm all the way up)
                     if ((currentStrafeState == StrafeState.IDLE) && (currentSlideState == SlideState.IDLE)) {
-                        strafeToPos(4, 0.2);
-                        setTargetSlide(400);
+                        strafeToPos(6, 0.2);
+                        setTargetSlide(800);
                         basketServo.setPosition(0.3);
 
                     }
@@ -247,7 +247,7 @@ public class rotatetestauto extends OpMode {
                     if ((currentArmState == armState.IDLE)) {
                         setTargetArm(4925);
                         wristServo.setPosition(0.40);
-                        clawServo.setPosition(0.6);
+                        clawServo.setPosition(0.5);
                     }
                     if ((currentArmState == armState.COMPLETED)) {
                         currentArmState = armState.IDLE;
@@ -259,40 +259,41 @@ public class rotatetestauto extends OpMode {
                         moveToPos(8, 0.1);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
-                        clawServo.setPosition(0.85);
                         currentDriveState = DriveState.IDLE;
-                        if(clawServo.getPosition() == 0.85) {
+                        clawServo.setPosition(0.72);
                             currentStep++;
-                        }
                     }
-                    break;
-                case 9: //Drive backwards -4 inches
+
+                     break;
+                case 9: //Drive 4 inches and lift arm
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-4, 0.1);
+                    moveToPos(1, 0.1);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
-                        currentDriveState = DriveState.IDLE;
-                        currentStep++;
+                    currentDriveState = DriveState.IDLE;
+                    currentStep++;
                     }
                     break;
-                case 10: //Drive back -3 and move arm to up
-                    if ((currentDriveState == DriveState.IDLE) && (currentArmState == armState.IDLE)) {
-                        moveToPos(-3, 0.1);
-                        setTargetArm(2400);
+                case 10: //Drive backwards -4 inches
+                    if ((currentArmState == armState.IDLE) && (currentDriveState == DriveState.IDLE)) {
+                        setTargetArm(2300);
+                        moveToPos(-13, 0.3);
+                        wristServo.setPosition(0.1);
                     }
-                    if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
-                        currentDriveState = DriveState.IDLE;
+                    if ((currentArmState == armState.COMPLETED) && (currentDriveState == DriveState.COMPLETED)) {
                         currentArmState = armState.IDLE;
+                        currentDriveState = DriveState.IDLE;
+                        clawServo.setPosition(0.5);
                         currentStep++;
                     }
                     break;
                 case 11: //Strafe 44 inches to place next specimen
-                    if ((currentStrafeState == StrafeState.IDLE)) {
-                        strafeToPos(44, 0.5);
-                        wristServo.setPosition(0.6);
+                    if ((currentArmState == armState.IDLE)) {
+                        setTargetArm(2400);
+                        wristServo.setPosition(0.4);
                     }
-                    if ((currentStrafeState == StrafeState.COMPLETED) ) {
-                        currentStrafeState = StrafeState.IDLE;
+                    if ((currentArmState == armState.COMPLETED) ) {
+                        currentArmState = armState.IDLE;
                         currentStep++;
                     }
                     break;
