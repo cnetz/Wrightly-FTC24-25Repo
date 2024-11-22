@@ -97,6 +97,7 @@ public class testauto extends OpMode {
     public void init() {
         armController = new PIDController(armP,armI,armD); //Declares PID Controller for arm/joint
         slideController = new PIDController(slideP,slideI,slideD); //Declares PID Controller for slide
+        ElapsedTime delay = null;
 
         frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor"); // EXP 2
         backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor"); // EXP 3

@@ -97,6 +97,7 @@ public class rotatetestauto extends OpMode {
     public void init() {
         armController = new PIDController(armP,armI,armD); //Declares PID Controller for arm/joint
         slideController = new PIDController(slideP,slideI,slideD); //Declares PID Controller for slide
+        ElapsedTime delay = null;
 
         frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor"); // EXP 2
         backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor"); // EXP 3
@@ -165,7 +166,7 @@ public class rotatetestauto extends OpMode {
 
         if(!test) {
             switch (currentStep) {
-                case 0: //Drive -20 inches and move slide up
+                case 0: // drives 8 inches and sets basket servo
                     if ((currentDriveState == DriveState.IDLE)) {
                         moveToPos(8, 0.4);
                         basketServo.setPosition(0.3);
@@ -175,7 +176,7 @@ public class rotatetestauto extends OpMode {
                         currentStep++;
                     }
                     break;
-                case 1://set claw and arm
+                case 1://strafe -30 inches and set slide to 2800
                     if ((currentStrafeState == StrafeState.IDLE) && (currentSlideState == SlideState.IDLE)) {
                         setTargetSlide(2800);
                         strafeToPos(-30, 0.45);
@@ -328,6 +329,16 @@ public class rotatetestauto extends OpMode {
                     }
                     break;
                 case 15:
+                    if ((currentDriveState == DriveState.IDLE)){
+                        moveToPos(1, 0.2);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)){
+                        currentDriveState = DriveState.IDLE;
+                        basketServo.setPosition(0.7);
+                        currentStep++;
+                    }
+                    break;
+                case 16:
                     if (currentStrafeState == StrafeState.IDLE) {
                         strafeToPos(16, 0.3);
                     }
@@ -336,7 +347,7 @@ public class rotatetestauto extends OpMode {
                         currentStep++;
                     }
                     break;
-                    case 16:
+                    case 17:
                       if  ((currentSlideState == SlideState.IDLE) && (currentArmState == armState.IDLE)) {
                         setTargetSlide(100);
                         setTargetArm(4925);
@@ -349,7 +360,7 @@ public class rotatetestauto extends OpMode {
                         currentStep++;
                     }
                     break;
-                case 17:
+                case 18:
                     if ((currentDriveState == DriveState.IDLE)) {
                         moveToPos(16, 0.35);
                     }
@@ -359,7 +370,7 @@ public class rotatetestauto extends OpMode {
                         currentStep++;
                     }
                     break;
-                case 18:
+                case 19:
                     if ((currentDriveState == DriveState.IDLE)) {
                         moveToPos(1, 0.1);
                     }
@@ -368,7 +379,7 @@ public class rotatetestauto extends OpMode {
                         currentStep++;
                     }
                     break;
-                case 19:
+                case 20:
                     break;
             }
         } else { // TESTING
