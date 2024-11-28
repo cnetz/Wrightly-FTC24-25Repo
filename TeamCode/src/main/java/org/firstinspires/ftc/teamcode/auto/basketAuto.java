@@ -15,7 +15,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @Autonomous
-public class rotatetestauto extends OpMode {
+public class basketAuto extends OpMode {
     double driveTolerance = 10;
     double currentInches = 0;
     double frontLeftDistance = 0;

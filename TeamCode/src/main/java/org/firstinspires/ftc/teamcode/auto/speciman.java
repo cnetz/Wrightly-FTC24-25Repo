@@ -15,7 +15,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @Autonomous
-public class testauto extends OpMode {
+public class speciman extends OpMode {
     double driveTolerance = 75;
     double currentInches = 0;
     double frontLeftDistance = 0;
@@ -59,6 +59,8 @@ public class testauto extends OpMode {
     private DcMotor frontLeftMotor, backLeftMotor, backRightMotor, frontRightMotor;
     private Servo wristServo, clawServo, basketServo;
     private final ElapsedTime newTimer = new ElapsedTime();
+    private final ElapsedTime delayTimer = new ElapsedTime();
+    private boolean isDelaying = false;
      public ElapsedTime delay = null;
 
     IMU imu;
@@ -92,7 +94,7 @@ public class testauto extends OpMode {
 
     private int currentStep = 0;
 
-    private boolean test = false;
+    private boolean test = true;// swich to test
 
     @Override
     public void init() {
@@ -328,15 +330,7 @@ public class testauto extends OpMode {
                     if (currentArmState == armState.COMPLETED) {
                         wristServo.setPosition(0.3);
                         currentArmState = armState.IDLE;
-                        if (delay == null) {
-                            delay = new
-                ElapsedTime();
-                            delay.reset();
-                        }
-                        if (delay.seconds() > 0.2) {
-                            currentStep++;
-                            delay = null;
-                        }
+                        currentStep++;
                     }
                     break;
                 case 16:
@@ -353,15 +347,27 @@ public class testauto extends OpMode {
             switch (currentStep) {
                 case 0:
                     if ((currentArmState == armState.IDLE)) {
-                        setTargetArm(4950);
+                        setTargetArm(2400);
                         wristServo.setPosition(0.45);
                     }
                     if ((currentArmState == armState.COMPLETED)) {
                         currentArmState = armState.IDLE;
-                        currentStep++;
+                        if (customDelay(5)){
+                            currentStep++;
+                        }
+
                     }
                     break;
                 case 1:
+                    if ((currentArmState == armState.IDLE)) {
+                        setTargetArm(4925);
+                    }
+                    if ((currentArmState == armState.COMPLETED)) {
+                        currentArmState = armState.IDLE;
+                        currentStep++;
+
+
+                    }
                     break;
             }
         }
@@ -541,56 +547,6 @@ public class testauto extends OpMode {
                 break;
 
             case MOVING:
-                // Continuously calculate and update motor speed to reach the target
-/*                if (currentInches > 5) {
-                    // Check each motor individually
-                    if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < driveTolerance) {
-                        // Stop the front left motor if it has reached its target
-                        frontLeftMotor.setPower(0);
-                    } else {
-                        // Calculate and set power if still moving
-                        double frontLeftSpeed = calculateSpeed(frontLeftMotor.getCurrentPosition(), (int) frontLeftDistance);
-                        frontLeftMotor.setPower(frontLeftSpeed);
-                    }
-
-                    if (Math.abs(frontRightMotor.getCurrentPosition() - frontRightDistance) < driveTolerance) {
-                        // Stop the front right motor if it has reached its target
-                        frontRightMotor.setPower(0);
-                    } else {
-                        // Calculate and set power if still moving
-                        double frontRightSpeed = calculateSpeed(frontRightMotor.getCurrentPosition(), (int) frontRightDistance);
-                        frontRightMotor.setPower(frontRightSpeed);
-                    }
-
-                    if (Math.abs(backLeftMotor.getCurrentPosition() - backLeftDistance) < driveTolerance) {
-                        // Stop the back left motor if it has reached its target
-                        backLeftMotor.setPower(0);
-                    } else {
-                        // Calculate and set power if still moving
-                        double backLeftSpeed = calculateSpeed(backLeftMotor.getCurrentPosition(), (int) backLeftDistance);
-                        backLeftMotor.setPower(backLeftSpeed);
-                    }
-
-                    if (Math.abs(backRightMotor.getCurrentPosition() - backRightDistance) < driveTolerance) {
-                        // Stop the back right motor if it has reached its target
-                        backRightMotor.setPower(0);
-                    } else {
-                        // Calculate and set power if still moving
-                        double backRightSpeed = calculateSpeed(backRightMotor.getCurrentPosition(), (int) backRightDistance);
-                        backRightMotor.setPower(backRightSpeed);
-                    }
-                }
-
-                // Check if all motors have reached the target positions within some tolerance
-                if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < driveTolerance &&
-                        Math.abs(frontRightMotor.getCurrentPosition() - frontRightDistance) < driveTolerance &&
-                        Math.abs(backLeftMotor.getCurrentPosition() - backLeftDistance) < driveTolerance &&
-                        Math.abs(backRightMotor.getCurrentPosition() - backRightDistance) < driveTolerance) {
-
-                    // All motors have reached their target; transition to COMPLETED state
-                    currentDriveState = DriveState.COMPLETED;
-                }*/
-
                 if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
                     frontLeftMotor.setPower(0);
                     frontRightMotor.setPower(0);
@@ -614,21 +570,6 @@ public class testauto extends OpMode {
                 break;
 
             case MOVING:
-                // converts inches to cpr for driving forward and back
-                // Check if the slide has reached the target
-/*                if (currentInches > 5){
-                    double frontLeftSpeed = calculateSpeed(frontLeftMotor.getCurrentPosition(), (int) frontLeftDistance);
-                    double frontRightSpeed = calculateSpeed(frontRightMotor.getCurrentPosition(), (int) frontRightDistance);
-                    double backLeftSpeed = calculateSpeed(backLeftMotor.getCurrentPosition(), (int) backLeftDistance);
-                    double backRightSpeed = calculateSpeed(backRightMotor.getCurrentPosition(), (int) backRightDistance);
-
-                    frontLeftMotor.setPower(frontLeftSpeed);
-                    frontRightMotor.setPower(frontRightSpeed);
-                    backLeftMotor.setPower(backLeftSpeed);
-                    backRightMotor.setPower(backRightSpeed);
-                }*/
-
-
                 if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
                     // If it's done moving, transition to COMPLETED state
 /*                    currentInches = 0;
@@ -676,6 +617,18 @@ public class testauto extends OpMode {
         traveled = Math.max(1, Math.max(0, traveled));
 
         return (baseSpeed + (maxSpeed - baseSpeed) * Math.sin(Math.PI * traveled));
+    }
+    private boolean customDelay(double seconds){
+        if (!isDelaying){
+            delayTimer.reset();//startTimer
+            isDelaying = true;
+        }
+        if (delayTimer.seconds() >= seconds){
+            isDelaying = false;
+            return true;
+        }
+        return false;//still delaying
+
     }
 }
 

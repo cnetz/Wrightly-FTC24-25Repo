@@ -32,8 +32,8 @@ public class mecanumDrive extends LinearOpMode {
 
     //HardwareMap
 
-    private DcMotor frontLeftMotor, backLeftMotor, backRightMotor, frontRightMotor, slideMotor, jointMotor;
-    private Servo wristServo, clawServo, basketServo;
+    private DcMotor frontLeftMotor, backLeftMotor, backRightMotor, frontRightMotor, slideMotor, jointMotor, hangMotor;
+    private Servo wristServo, clawServo, basketServo, hangServo;
 
     //States
 
@@ -59,6 +59,7 @@ public class mecanumDrive extends LinearOpMode {
 
         //HardwareMap
 
+        hangMotor = hardwareMap.get(DcMotor.class, "hangMotor");
         frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor");
         backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor");
         backLeftMotor = hardwareMap.get(DcMotor.class, "backLeftMotor");
@@ -68,6 +69,7 @@ public class mecanumDrive extends LinearOpMode {
         wristServo = hardwareMap.get(Servo.class,"wristServo");
         clawServo = hardwareMap.get(Servo.class,"clawServo");
         basketServo = hardwareMap.get(Servo.class,"basketServo");
+        hangServo = hardwareMap.get(Servo.class,"hangServo");
 
         //Motor Power Behavior
 
@@ -157,6 +159,12 @@ public class mecanumDrive extends LinearOpMode {
                     changeSpeed = 0.25; //Slow driving speed
                     changeSpeedPos = true;
                 }
+            }
+            if (buttonHandler.isPressedOnceDPUP_2(gamepad2.dpad_up)){
+                hangMotor.setPower(0.3);
+            }
+            if (buttonHandler.isPressedOnceDPDW_2(gamepad2.dpad_down)){
+                hangServo.setPosition(0.3);
             }
 
             //GamePad 2 buttons
