@@ -101,6 +101,7 @@ public class mecanumDrive extends LinearOpMode {
         armTarget = jointMotor.getCurrentPosition();
         clawServo.setPosition(0.6);
 
+
         newTimer.reset();
 
         //Button Handler
@@ -160,12 +161,19 @@ public class mecanumDrive extends LinearOpMode {
                     changeSpeedPos = true;
                 }
             }
-            if (buttonHandler.isPressedOnceDPUP_2(gamepad2.dpad_up)){
-                hangMotor.setPower(0.3);
-            }
-            if (buttonHandler.isPressedOnceDPDW_2(gamepad2.dpad_down)){
+
+            if (gamepad1.dpad_up){
                 hangServo.setPosition(0.3);
+            }else {
+                hangServo.setPosition(0.5);
             }
+
+            if (gamepad1.dpad_down){
+                hangMotor.setPower(0.8);
+            }else {
+                hangMotor.setPower(0.0);
+            }
+
 
             //GamePad 2 buttons
 

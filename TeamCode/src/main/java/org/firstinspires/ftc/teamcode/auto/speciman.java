@@ -16,12 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @Autonomous
 public class speciman extends OpMode {
-    double driveTolerance = 75;
-    double currentInches = 0;
-    double frontLeftDistance = 0;
-    double backLeftDistance = 0;
-    double backRightDistance = 0;
-    double frontRightDistance = 0;
+    double driveTolerance = 20;
     double baseSpeed = 0.1;
     double maxSpeed = 0.7;
 
@@ -94,7 +89,7 @@ public class speciman extends OpMode {
 
     private int currentStep = 0;
 
-    private boolean test = true;// swich to test
+    private boolean test = false;// swich to test
 
     @Override
     public void init() {
@@ -219,6 +214,10 @@ public class speciman extends OpMode {
                         currentStep++;
                     }
                     break;
+
+                    // FIX 5 6 7
+
+
                 case 5: //Move arm to place specimen
                     if ((currentArmState == armState.IDLE)) {
                         setTargetArm(1900);
@@ -240,28 +239,39 @@ public class speciman extends OpMode {
                 case 7: //Drive 4 inches and lift arm
                     if ((currentDriveState == DriveState.IDLE)) {
                         wristServo.setPosition(0.6);
-                        moveToPos(-0, 0.4);
+                        moveToPos(0, 0.4);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
                         currentStep++;
                     }
                     break;
+
+
+
                 case 8: // BIG Strafe and lift arm (arm all the way up)
-                    if ((currentStrafeState == StrafeState.IDLE) && (currentArmState == armState.IDLE)
+                    if ((currentStrafeState == StrafeState.IDLE)
+                            && (currentArmState == armState.IDLE)
                             && (currentSlideState == SlideState.IDLE)) {
                         setTargetArm(2400);
                         strafeToPos(-44, 0.5);
                         setTargetSlide(50);
                     }
                     if ((currentStrafeState == StrafeState.COMPLETED)
-                            && (currentArmState == armState.COMPLETED) && (currentSlideState == SlideState.COMPLETED)) {
+                            && (currentArmState == armState.COMPLETED)
+                            && (currentSlideState == SlideState.COMPLETED)) {
                         currentStrafeState = StrafeState.IDLE;
                         currentArmState = armState.IDLE;
                         currentSlideState = SlideState.IDLE;
                         currentStep++;
                     }
                     break;
+
+
+
+
+
+
                 case 9: //Lower arm + claw to pickup 2nd specimen
                     if ((currentArmState == armState.IDLE)) {
                         setTargetArm(5000);
@@ -272,28 +282,24 @@ public class speciman extends OpMode {
                         currentStep++;
                     }
                     break;
-                case 10: //Drive forward 8 inches then close claw
+                case 10: //Drive forward 8 inches then close claw to pickup up 2nd speicmen
                     if ((currentDriveState == DriveState.IDLE)) {
                         moveToPos(8, 0.2);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
                         clawServo.setPosition(0.85);
-                            currentStep++;
+                        currentStep++;
                     }
                     break;
-                case 11: //Drive backwards -4 inches
-                    if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-4, 0.1);
-                    }
-                    if ((currentDriveState == DriveState.COMPLETED)) {
-                        currentDriveState = DriveState.IDLE;
-                        currentStep++;
+                case 11:
+                    if(customDelay(0.5)) {
+                        currentStep = 12;
                     }
                     break;
                 case 12: //Drive back -3 and move arm to up
                     if ((currentDriveState == DriveState.IDLE) && (currentArmState == armState.IDLE)) {
-                        moveToPos(-3, 0.1);
+                        moveToPos(-7, 0.1);
                         setTargetArm(1900);
                         wristServo.setPosition(0.6);
                     }
@@ -315,7 +321,7 @@ public class speciman extends OpMode {
                     break;
                 case 14: //Drive -5 and move arm to place
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-8, 0.3);
+                        moveToPos(-16, 0.3);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
@@ -328,9 +334,11 @@ public class speciman extends OpMode {
                         wristServo.setPosition(0.3);
                     }
                     if (currentArmState == armState.COMPLETED) {
-                        wristServo.setPosition(0.3);
                         currentArmState = armState.IDLE;
-                        currentStep++;
+                        if(customDelay(0.5)) {
+                            currentStep++;
+                        }
+
                     }
                     break;
                 case 16:
@@ -345,30 +353,30 @@ public class speciman extends OpMode {
             }
         } else { // TESTING
             switch (currentStep) {
-                case 0:
-                    if ((currentArmState == armState.IDLE)) {
-                        setTargetArm(2400);
-                        wristServo.setPosition(0.45);
+                case 0: //Drive forward 8 inches then close claw to pickup up 2nd speicmen
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(4, 0.2);
                     }
-                    if ((currentArmState == armState.COMPLETED)) {
-                        currentArmState = armState.IDLE;
-                        if (customDelay(5)){
-                            currentStep++;
-                        }
-
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        clawServo.setPosition(0.85);
+                        currentStep++;
                     }
                     break;
                 case 1:
-                    if ((currentArmState == armState.IDLE)) {
-                        setTargetArm(4925);
-                    }
-                    if ((currentArmState == armState.COMPLETED)) {
-                        currentArmState = armState.IDLE;
-                        currentStep++;
-
-
+                    if(customDelay(2)) {
+                        currentStep = 2;
                     }
                     break;
+
+                case 2:
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(-4, 0.2);
+                    }
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
+                    }
             }
         }
         strafeFSM();
@@ -386,10 +394,21 @@ public class speciman extends OpMode {
 
         telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
         telemetry.addData("time", newTimer.seconds());
-        telemetry.addData("inches", currentInches);
-        telemetry.addData("frontLeftDistance", frontLeftDistance);
-        telemetry.addData("frontLeftPower", frontLeftMotor.getPower());
-        telemetry.addData("frontLeftPos", frontLeftMotor.getCurrentPosition());
+        telemetry.addData("DriveState", currentDriveState);
+        telemetry.addData("ArmState", currentArmState);
+        telemetry.addData("SlideState", currentSlideState);
+        telemetry.addData("CurrentStep", currentStep);
+
+
+//        telemetry.addData("inches", currentInches);
+//        telemetry.addData("frontLeftDistance", frontLeftDistance);
+//        telemetry.addData("frontLeftPower", frontLeftMotor.getPower());
+//        telemetry.addData("frontLeftPos", frontLeftMotor.getCurrentPosition());
+
+
+
+
+
 /*        telemetry.addData("frontRight", frontRightMotor.getCurrentPosition());
         telemetry.addData("backLeft", backLeftMotor.getCurrentPosition());
         telemetry.addData("backRight", backRightMotor.getCurrentPosition());
@@ -406,13 +425,11 @@ public class speciman extends OpMode {
 
     public void moveToPos(double inches, double speed) {
         int move = (int)(Math.round(inches * conversion));
-/*        currentInches = Math.abs(inches);
-        if (currentInches > 5) {
-            frontLeftDistance = (frontLeftMotor.getCurrentPosition() + move);
-            backLeftDistance = (backLeftMotor.getCurrentPosition() + move);
-            backRightDistance = (backRightMotor.getCurrentPosition() + move);
-            frontRightDistance = (frontRightMotor.getCurrentPosition() + move);
-        }*/
+
+//        frontLeftDistance = (frontLeftMotor.getCurrentPosition() + move);
+//        backLeftDistance = (backLeftMotor.getCurrentPosition() + move);
+//        backRightDistance = (backRightMotor.getCurrentPosition() + move);
+//        frontRightDistance = (frontRightMotor.getCurrentPosition() + move);
 
         frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition() + move);
         frontRightMotor.setTargetPosition(frontRightMotor.getCurrentPosition() + move);
@@ -547,7 +564,11 @@ public class speciman extends OpMode {
                 break;
 
             case MOVING:
-                if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
+                if ((Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftMotor.getTargetPosition()) < driveTolerance
+                        && Math.abs(frontRightMotor.getCurrentPosition() - frontRightMotor.getTargetPosition()) < driveTolerance
+                        && Math.abs(backLeftMotor.getCurrentPosition() - backLeftMotor.getTargetPosition()) < driveTolerance
+                        && Math.abs(backRightMotor.getCurrentPosition() - backRightMotor.getTargetPosition()) < driveTolerance)){
+
                     frontLeftMotor.setPower(0);
                     frontRightMotor.setPower(0);
                     backLeftMotor.setPower(0);
@@ -570,13 +591,10 @@ public class speciman extends OpMode {
                 break;
 
             case MOVING:
-                if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
-                    // If it's done moving, transition to COMPLETED state
-/*                    currentInches = 0;
-                    frontLeftDistance = 0;
-                    backLeftDistance = 0;
-                    backRightDistance = 0;
-                    frontRightDistance = 0;*/
+                if ((Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftMotor.getTargetPosition()) < driveTolerance
+                        && Math.abs(frontRightMotor.getCurrentPosition() - frontRightMotor.getTargetPosition()) < driveTolerance
+                        && Math.abs(backLeftMotor.getCurrentPosition() - backLeftMotor.getTargetPosition()) < driveTolerance
+                        && Math.abs(backRightMotor.getCurrentPosition() - backRightMotor.getTargetPosition()) < driveTolerance)){
 
                     frontLeftMotor.setPower(0);
                     frontRightMotor.setPower(0);
