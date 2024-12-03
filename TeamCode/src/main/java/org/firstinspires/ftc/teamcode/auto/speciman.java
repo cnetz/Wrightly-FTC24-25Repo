@@ -89,7 +89,7 @@ public class speciman extends OpMode {
 
     private int currentStep = 0;
 
-    private boolean test = true;// swich to test
+    private boolean test = false;// swich to test
 
     @Override
     public void init() {
@@ -195,13 +195,10 @@ public class speciman extends OpMode {
                         currentDriveState = DriveState.IDLE;
                         currentStep++;
                     }
+                    break;
                 case 3: //Drives 1.5 to to place speciman
-                    if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(0.5, 0.1);
                         wristServo.setPosition(0.3);
-                    }
-                    if ((currentDriveState == DriveState.COMPLETED)) {
-                        currentDriveState = DriveState.IDLE;
+                    if(customDelay(0.5)) {
                         currentStep++;
                     }
                     break;
@@ -383,7 +380,7 @@ public class speciman extends OpMode {
                     break;
                 case 21:
                     if ((currentStrafeState == StrafeState.IDLE)) {
-                        strafeToPos(-41, 0.7);
+                        strafeToPos(-48, 0.7);
                     }
                     if ((currentStrafeState == StrafeState.COMPLETED)) {
                         currentStrafeState = StrafeState.IDLE;
@@ -402,71 +399,14 @@ public class speciman extends OpMode {
                     break;
                 case 23:
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(8, 0.4);
+                        moveToPos(4, 0.4);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
                         clawServo.setPosition(0.85);
                         currentStep++;
                     }
-                    break;
-                case 24:
-                        if(customDelay(0.5)) {
-                            currentStep++;
-                        }
-                    break;
-                case 25:
-                    if ((currentDriveState == DriveState.IDLE) && (currentArmState == armState.IDLE)) {
-                        moveToPos(-7, 0.1);
-                        setTargetArm(1900);
-                        wristServo.setPosition(0.6);
-                    }
-                    if ((currentDriveState == DriveState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
-                        currentDriveState = DriveState.IDLE;
-                        currentArmState = armState.IDLE;
-                        currentStep++;
-                    }
-                    break;
-                case 26:
-                    if ((currentStrafeState == StrafeState.IDLE)) {
-                        strafeToPos(43, 0.9);
-                        wristServo.setPosition(0.6);
-                    }
-                    if ((currentStrafeState == StrafeState.COMPLETED) ) {
-                        currentStrafeState = StrafeState.IDLE;
-                        currentStep++;
-                    }
-                    break;
-                case 27: //Drive -5 and move arm to place
-                    if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-16, 0.7);
-                    }
-                    if ((currentDriveState == DriveState.COMPLETED)) {
-                        currentDriveState = DriveState.IDLE;
-                        currentStep++;
-                    }
-                    break;
-                case 28:
-                    if (currentArmState == armState.IDLE) {
-                        setTargetArm(1825);
-                        wristServo.setPosition(0.3);
-                    }
-                    if (currentArmState == armState.COMPLETED) {
-                        currentArmState = armState.IDLE;
-                        if (customDelay(0.5)) {
-                            currentStep++;
-                        }
-                    }
-                    break;
-                case 29:
-                    if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(6, 0.4);
-                    }
-                    if ((currentDriveState == DriveState.COMPLETED)) {
-                        currentDriveState = DriveState.IDLE;
-                        clawServo.setPosition(0.6);
-                        currentStep++;
-                    }
+
             }
         } else { // TESTING
             switch (currentStep) {
@@ -523,7 +463,7 @@ public class speciman extends OpMode {
                     break;
                 case 6: //Drives 1.5 to to place speciman
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(4, 0.3);
+                        moveToPos(3, 0.3);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
@@ -542,7 +482,7 @@ public class speciman extends OpMode {
                     if ((currentStrafeState == StrafeState.IDLE)
                             && (currentArmState == armState.IDLE)) {
                         setTargetArm(500);
-                        strafeToPos(-29, 0.6);
+                        strafeToPos(-29, 0.5);
                     }
                     if ((currentStrafeState == StrafeState.COMPLETED)
                             && (currentArmState == armState.COMPLETED)) {
@@ -554,7 +494,7 @@ public class speciman extends OpMode {
                     break;
                 case 9:
                     if (currentArmState == armState.IDLE) {
-                        setTargetArm(250);
+                        setTargetArm(150);
                     }
                     if (currentArmState == armState.COMPLETED) {
                         currentArmState = armState.IDLE;
@@ -603,7 +543,7 @@ public class speciman extends OpMode {
                     break;
                 case 15:
                     if ((currentStrafeState == StrafeState.IDLE)) {
-                        strafeToPos(-9, 0.4);
+                        strafeToPos(-11, 0.4);
                     }
                     if ((currentStrafeState == StrafeState.COMPLETED)) {
                         currentStrafeState = StrafeState.IDLE;
@@ -612,7 +552,7 @@ public class speciman extends OpMode {
                     break;
                 case 16:
                     if (currentArmState == armState.IDLE) {
-                        setTargetArm(250);
+                        setTargetArm(150);
                     }
                     if (currentArmState == armState.COMPLETED) {
                         currentArmState = armState.IDLE;
@@ -649,7 +589,7 @@ public class speciman extends OpMode {
                     break;
                 case 21:
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-7, 0.4);
+                        moveToPos(-11, 0.4);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
@@ -673,7 +613,7 @@ public class speciman extends OpMode {
                     break;
                 case 24:
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(7, 0.4);
+                        moveToPos(10, 0.4);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;

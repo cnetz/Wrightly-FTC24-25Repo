@@ -58,7 +58,8 @@ public class basketAuto extends OpMode {
     private DcMotorEx jointMotor, slideMotor;
     private DcMotor frontLeftMotor, backLeftMotor, backRightMotor, frontRightMotor;
     private Servo wristServo, clawServo, basketServo;
-    private final ElapsedTime newTimer = new ElapsedTime();
+    private boolean isDelaying = false;
+    public ElapsedTime delay = null;
 
     IMU imu;
     private boolean fiveSeconds = false;
@@ -168,7 +169,7 @@ public class basketAuto extends OpMode {
             switch (currentStep) {
                 case 0: // drives 8 inches and sets basket servo
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(8, 0.4);
+                        moveToPos(8, 0.6);
                         basketServo.setPosition(0.3);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
@@ -179,7 +180,7 @@ public class basketAuto extends OpMode {
                 case 1://strafe -30 inches and set slide to 2800
                     if ((currentStrafeState == StrafeState.IDLE) && (currentSlideState == SlideState.IDLE)) {
                         setTargetSlide(2800);
-                        strafeToPos(-30, 0.45);
+                        strafeToPos(-15, 0.55);
                     }
                     if ((currentStrafeState == StrafeState.COMPLETED) && (currentSlideState == SlideState.COMPLETED)) {
                         currentStrafeState = StrafeState.IDLE;
@@ -199,7 +200,7 @@ public class basketAuto extends OpMode {
                     break;
                 case 3: //Drives 1.5 to to place speciman
                     if ((currentStrafeState == StrafeState.IDLE) && (currentSlideState == SlideState.IDLE)) {
-                        strafeToPos(-9, 0.3);
+                        strafeToPos(-9, 0.5);
                         setTargetSlide(3300);
                     }
                     if ((currentStrafeState == StrafeState.COMPLETED) && (currentSlideState == SlideState.COMPLETED)) {
@@ -210,19 +211,22 @@ public class basketAuto extends OpMode {
                     break;
                 case 4: //Move arm to place specimen
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(-5, 0.3);
+                        moveToPos(-5, 0.5);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
                         basketServo.setPosition(0.7);
-                        if (basketServo.getPosition() == 0.7) {
                             currentStep++;
-                        }
+                    }
+                    break;
+                case 5:
+                    if(customDelay(0.5)) {
+                        currentStep++;
                     }
                     break;
                 case 5: //Drive 4 inches and lift arm
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(7, 0.3);
+                        moveToPos(7, 0.5);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
@@ -231,7 +235,7 @@ public class basketAuto extends OpMode {
                     break;
                 case 6: // BIG Strafe and lift arm (arm all the way up)
                     if ((currentStrafeState == StrafeState.IDLE) && (currentSlideState == SlideState.IDLE)) {
-                        strafeToPos(6, 0.3);
+                        strafeToPos(6, 0.5);
                         setTargetSlide(800);
                         basketServo.setPosition(0.3);
 
@@ -239,9 +243,7 @@ public class basketAuto extends OpMode {
                     if ((currentStrafeState == StrafeState.COMPLETED) && (currentSlideState == SlideState.COMPLETED)) {
                         currentStrafeState = StrafeState.IDLE;
                         currentSlideState = SlideState.IDLE;
-                        if (basketServo.getPosition() == 0.3) {
                             currentStep++;
-                        }
                     }
                     break;
                 case 7: //Lower arm + claw to pickup 2nd specimen
@@ -257,7 +259,7 @@ public class basketAuto extends OpMode {
                     break;
                 case 8: //Drive forward 8 inches then close claw
                     if ((currentDriveState == DriveState.IDLE)) {
-                        moveToPos(8, 0.25);
+                        moveToPos(8, 0.4);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
@@ -386,8 +388,7 @@ public class basketAuto extends OpMode {
             switch (currentStep) {
                 case 0:
                     if ((currentArmState == armState.IDLE)) {
-                        setTargetArm(4950);
-                        wristServo.setPosition(0.45);
+                        setTargetArm(200);
                     }
                     if ((currentArmState == armState.COMPLETED)) {
                         currentArmState = armState.IDLE;
@@ -574,57 +575,11 @@ public class basketAuto extends OpMode {
                 break;
 
             case MOVING:
-                // Continuously calculate and update motor speed to reach the target
-/*                if (currentInches > 5) {
-                    // Check each motor individually
-                    if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < driveTolerance) {
-                        // Stop the front left motor if it has reached its target
-                        frontLeftMotor.setPower(0);
-                    } else {
-                        // Calculate and set power if still moving
-                        double frontLeftSpeed = calculateSpeed(frontLeftMotor.getCurrentPosition(), (int) frontLeftDistance);
-                        frontLeftMotor.setPower(frontLeftSpeed);
-                    }
+                if ((Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftMotor.getTargetPosition()) < driveTolerance
+                        && Math.abs(frontRightMotor.getCurrentPosition() - frontRightMotor.getTargetPosition()) < driveTolerance
+                        && Math.abs(backLeftMotor.getCurrentPosition() - backLeftMotor.getTargetPosition()) < driveTolerance
+                        && Math.abs(backRightMotor.getCurrentPosition() - backRightMotor.getTargetPosition()) < driveTolerance)){
 
-                    if (Math.abs(frontRightMotor.getCurrentPosition() - frontRightDistance) < driveTolerance) {
-                        // Stop the front right motor if it has reached its target
-                        frontRightMotor.setPower(0);
-                    } else {
-                        // Calculate and set power if still moving
-                        double frontRightSpeed = calculateSpeed(frontRightMotor.getCurrentPosition(), (int) frontRightDistance);
-                        frontRightMotor.setPower(frontRightSpeed);
-                    }
-
-                    if (Math.abs(backLeftMotor.getCurrentPosition() - backLeftDistance) < driveTolerance) {
-                        // Stop the back left motor if it has reached its target
-                        backLeftMotor.setPower(0);
-                    } else {
-                        // Calculate and set power if still moving
-                        double backLeftSpeed = calculateSpeed(backLeftMotor.getCurrentPosition(), (int) backLeftDistance);
-                        backLeftMotor.setPower(backLeftSpeed);
-                    }
-
-                    if (Math.abs(backRightMotor.getCurrentPosition() - backRightDistance) < driveTolerance) {
-                        // Stop the back right motor if it has reached its target
-                        backRightMotor.setPower(0);
-                    } else {
-                        // Calculate and set power if still moving
-                        double backRightSpeed = calculateSpeed(backRightMotor.getCurrentPosition(), (int) backRightDistance);
-                        backRightMotor.setPower(backRightSpeed);
-                    }
-                }
-
-                // Check if all motors have reached the target positions within some tolerance
-                if (Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftDistance) < driveTolerance &&
-                        Math.abs(frontRightMotor.getCurrentPosition() - frontRightDistance) < driveTolerance &&
-                        Math.abs(backLeftMotor.getCurrentPosition() - backLeftDistance) < driveTolerance &&
-                        Math.abs(backRightMotor.getCurrentPosition() - backRightDistance) < driveTolerance) {
-
-                    // All motors have reached their target; transition to COMPLETED state
-                    currentDriveState = DriveState.COMPLETED;
-                }*/
-
-                if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
                     frontLeftMotor.setPower(0);
                     frontRightMotor.setPower(0);
                     backLeftMotor.setPower(0);
@@ -646,28 +601,10 @@ public class basketAuto extends OpMode {
                 break;
 
             case MOVING:
-                // converts inches to cpr for driving forward and back
-                // Check if the slide has reached the target
-/*                if (currentInches > 5){
-                    double frontLeftSpeed = calculateSpeed(frontLeftMotor.getCurrentPosition(), (int) frontLeftDistance);
-                    double frontRightSpeed = calculateSpeed(frontRightMotor.getCurrentPosition(), (int) frontRightDistance);
-                    double backLeftSpeed = calculateSpeed(backLeftMotor.getCurrentPosition(), (int) backLeftDistance);
-                    double backRightSpeed = calculateSpeed(backRightMotor.getCurrentPosition(), (int) backRightDistance);
-
-                    frontLeftMotor.setPower(frontLeftSpeed);
-                    frontRightMotor.setPower(frontRightSpeed);
-                    backLeftMotor.setPower(backLeftSpeed);
-                    backRightMotor.setPower(backRightSpeed);
-                }*/
-
-
-                if (!frontLeftMotor.isBusy() && !frontRightMotor.isBusy() && !backLeftMotor.isBusy() && !backRightMotor.isBusy()) {
-                    // If it's done moving, transition to COMPLETED state
-/*                    currentInches = 0;
-                    frontLeftDistance = 0;
-                    backLeftDistance = 0;
-                    backRightDistance = 0;
-                    frontRightDistance = 0;*/
+                if ((Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftMotor.getTargetPosition()) < driveTolerance
+                        && Math.abs(frontRightMotor.getCurrentPosition() - frontRightMotor.getTargetPosition()) < driveTolerance
+                        && Math.abs(backLeftMotor.getCurrentPosition() - backLeftMotor.getTargetPosition()) < driveTolerance
+                        && Math.abs(backRightMotor.getCurrentPosition() - backRightMotor.getTargetPosition()) < driveTolerance)){
 
                     frontLeftMotor.setPower(0);
                     frontRightMotor.setPower(0);
@@ -700,13 +637,24 @@ public class basketAuto extends OpMode {
     // }
     // return currentSpeed;
 
-    private double calculateSpeed(int currentDistance, int totalDistance){
+    private double calculateSpeed(int currentDistance, int totalDistance) {
         int distanceRemaining = Math.abs(totalDistance - currentDistance);
         int totalTravelDistance = Math.abs(totalDistance);
 
-        double traveled = 1.0 - (double)(distanceRemaining / totalTravelDistance);
+        double traveled = 1.0 - (double) (distanceRemaining / totalTravelDistance);
         traveled = Math.max(1, Math.max(0, traveled));
 
         return (baseSpeed + (maxSpeed - baseSpeed) * Math.sin(Math.PI * traveled));
+
+        private boolean customDelay(double seconds){
+            if (!isDelaying) {
+                delayTimer.reset();//startTimer
+                isDelaying = true;
+            }
+            if (delayTimer.seconds() >= seconds) {
+                isDelaying = false;
+                return true;
+            }
+            return false;//still delaying
+        }
     }
-}
