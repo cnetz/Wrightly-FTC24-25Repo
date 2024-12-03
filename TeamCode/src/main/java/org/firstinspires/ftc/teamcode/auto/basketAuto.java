@@ -29,12 +29,12 @@ public class basketAuto extends OpMode {
 
     private PIDController armController;
     private PIDController slideController;
-    double armP = 0.004,armI = 0, armD = 0.0002;
+    double armP = 0.004, armI = 0, armD = 0.0002;
     double armF = 0.03;
     int armTarget = 0;
     int armThreshold = 10;
     double armTicksInDegree = 285 / 180; //1425 / 5 (gear ratio) = 285
-    double slideP = 0.006,slideI = 0, slideD = 0.0001;
+    double slideP = 0.006, slideI = 0, slideD = 0.0001;
     double slideF = 0.04;
     int slideTarget = 0;
     int slideThreshold = 50;
@@ -46,8 +46,8 @@ public class basketAuto extends OpMode {
     double gearRatio = 1;
     double diameter = 4.1; //4.09449 in inches - mecanum
     double slideDiameter = 1.5;
-    double cpi = (cpr * gearRatio)/(Math.PI * diameter);
-    double cpiSlide = (cpr * gearRatio)/(Math.PI * slideDiameter);
+    double cpi = (cpr * gearRatio) / (Math.PI * diameter);
+    double cpiSlide = (cpr * gearRatio) / (Math.PI * slideDiameter);
     double bias = 1.0;
     double conversion = cpi * bias;
     double robotWidth = 12.9;
@@ -58,6 +58,8 @@ public class basketAuto extends OpMode {
     private DcMotorEx jointMotor, slideMotor;
     private DcMotor frontLeftMotor, backLeftMotor, backRightMotor, frontRightMotor;
     private Servo wristServo, clawServo, basketServo;
+    private final ElapsedTime newTimer = new ElapsedTime();
+    private final ElapsedTime delayTimer = new ElapsedTime();
     private boolean isDelaying = false;
     public ElapsedTime delay = null;
 
@@ -67,25 +69,34 @@ public class basketAuto extends OpMode {
 
     //States
 
-    private enum OrderState{
-        FIRST,SECOND,THIRD,FOURTH,FIFTH,SIX,SEVEN,EIGHT,NINE,TEN
+    private enum OrderState {
+        FIRST, SECOND, THIRD, FOURTH, FIFTH, SIX, SEVEN, EIGHT, NINE, TEN
     }
+
     private OrderState currentOrderState = OrderState.FIRST;
-    private enum SlideState{
-        IDLE,MOVING,COMPLETED
+
+    private enum SlideState {
+        IDLE, MOVING, COMPLETED
     }
+
     private SlideState currentSlideState = SlideState.IDLE;
-    private enum DriveState{
-        IDLE,MOVING,COMPLETED
+
+    private enum DriveState {
+        IDLE, MOVING, COMPLETED
     }
+
     private DriveState currentDriveState = DriveState.IDLE;
-    private enum armState{
-        IDLE, COMPLETED,MOVING//same as completed
+
+    private enum armState {
+        IDLE, COMPLETED, MOVING//same as completed
     }
+
     private armState currentArmState = armState.IDLE;
-    private enum StrafeState{
-        IDLE,MOVING,COMPLETED
+
+    private enum StrafeState {
+        IDLE, MOVING, COMPLETED
     }
+
     private StrafeState currentStrafeState = StrafeState.IDLE;
 
     //Current Step
@@ -96,8 +107,8 @@ public class basketAuto extends OpMode {
 
     @Override
     public void init() {
-        armController = new PIDController(armP,armI,armD); //Declares PID Controller for arm/joint
-        slideController = new PIDController(slideP,slideI,slideD); //Declares PID Controller for slide
+        armController = new PIDController(armP, armI, armD); //Declares PID Controller for arm/joint
+        slideController = new PIDController(slideP, slideI, slideD); //Declares PID Controller for slide
         ElapsedTime delay = null;
 
         frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor"); // EXP 2
@@ -106,10 +117,10 @@ public class basketAuto extends OpMode {
         frontLeftMotor = hardwareMap.get(DcMotor.class, "frontLeftMotor"); // EXP 1
         jointMotor = hardwareMap.get(DcMotorEx.class, "jointMotor"); // CON - 3
         slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor"); // CON - 0
-        wristServo = hardwareMap.get(Servo.class,"wristServo"); // CON - 0
-        clawServo = hardwareMap.get(Servo.class,"clawServo"); // EXP - 5
-        basketServo = hardwareMap.get(Servo.class,"basketServo"); // CON - 4
-        imu = hardwareMap.get(IMU.class,"imu");
+        wristServo = hardwareMap.get(Servo.class, "wristServo"); // CON - 0
+        clawServo = hardwareMap.get(Servo.class, "clawServo"); // EXP - 5
+        basketServo = hardwareMap.get(Servo.class, "basketServo"); // CON - 4
+        imu = hardwareMap.get(IMU.class, "imu");
 
         //Sets motor power behavior to brake
 
@@ -136,7 +147,7 @@ public class basketAuto extends OpMode {
         //IMU orientation
 
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
@@ -165,7 +176,7 @@ public class basketAuto extends OpMode {
         updateTelemetry();
 
 
-        if(!test) {
+        if (!test) {
             switch (currentStep) {
                 case 0: // drives 8 inches and sets basket servo
                     if ((currentDriveState == DriveState.IDLE)) {
@@ -216,11 +227,11 @@ public class basketAuto extends OpMode {
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
                         basketServo.setPosition(0.7);
-                            currentStep++;
+                        currentStep++;
                     }
                     break;
                 case 5:
-                    if(customDelay(0.5)) {
+                    if (customDelay(0.5)) {
                         currentStep++;
                     }
                     break;
@@ -243,7 +254,7 @@ public class basketAuto extends OpMode {
                     if ((currentStrafeState == StrafeState.COMPLETED) && (currentSlideState == SlideState.COMPLETED)) {
                         currentStrafeState = StrafeState.IDLE;
                         currentSlideState = SlideState.IDLE;
-                            currentStep++;
+                        currentStep++;
                     }
                     break;
                 case 7: //Lower arm + claw to pickup 2nd specimen
@@ -264,17 +275,17 @@ public class basketAuto extends OpMode {
                     if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
                         clawServo.setPosition(0.72);
-                            currentStep++;
+                        currentStep++;
                     }
 
-                     break;
+                    break;
                 case 9: //Drive 4 inches and lift arm
                     if ((currentDriveState == DriveState.IDLE)) {
-                    moveToPos(1, 0.1);
+                        moveToPos(1, 0.1);
                     }
                     if ((currentDriveState == DriveState.COMPLETED)) {
-                    currentDriveState = DriveState.IDLE;
-                    currentStep++;
+                        currentDriveState = DriveState.IDLE;
+                        currentStep++;
                     }
                     break;
                 case 10: //Drive backwards -4 inches
@@ -295,7 +306,7 @@ public class basketAuto extends OpMode {
                         setTargetArm(2400);
                         wristServo.setPosition(0.4);
                     }
-                    if ((currentArmState == armState.COMPLETED) ) {
+                    if ((currentArmState == armState.COMPLETED)) {
                         currentArmState = armState.IDLE;
                         currentStep++;
                     }
@@ -321,20 +332,20 @@ public class basketAuto extends OpMode {
 
                     break;
                 case 14:
-                    if ((currentDriveState == DriveState.IDLE)){
-                            moveToPos(-3, 0.2);
+                    if ((currentDriveState == DriveState.IDLE)) {
+                        moveToPos(-3, 0.2);
                     }
-                    if ((currentDriveState == DriveState.COMPLETED)){
-                            currentDriveState = DriveState.IDLE;
-                            basketServo.setPosition(0.7);
-                            currentStep++;
+                    if ((currentDriveState == DriveState.COMPLETED)) {
+                        currentDriveState = DriveState.IDLE;
+                        basketServo.setPosition(0.7);
+                        currentStep++;
                     }
                     break;
                 case 15:
-                    if ((currentDriveState == DriveState.IDLE)){
+                    if ((currentDriveState == DriveState.IDLE)) {
                         moveToPos(1, 0.2);
                     }
-                    if ((currentDriveState == DriveState.COMPLETED)){
+                    if ((currentDriveState == DriveState.COMPLETED)) {
                         currentDriveState = DriveState.IDLE;
                         basketServo.setPosition(0.7);
                         currentStep++;
@@ -349,14 +360,14 @@ public class basketAuto extends OpMode {
                         currentStep++;
                     }
                     break;
-                    case 17:
-                      if  ((currentSlideState == SlideState.IDLE) && (currentArmState == armState.IDLE)) {
+                case 17:
+                    if ((currentSlideState == SlideState.IDLE) && (currentArmState == armState.IDLE)) {
                         setTargetSlide(100);
                         setTargetArm(4925);
                         wristServo.setPosition(0.4);
                         basketServo.setPosition(0.3);
                     }
-                    if ((currentSlideState == SlideState.COMPLETED) && (currentArmState == armState.COMPLETED)){
+                    if ((currentSlideState == SlideState.COMPLETED) && (currentArmState == armState.COMPLETED)) {
                         currentSlideState = SlideState.IDLE;
                         currentArmState = armState.IDLE;
                         currentStep++;
@@ -404,12 +415,13 @@ public class basketAuto extends OpMode {
         armFSM();
         slideFSM();
     }
+
     @Override
     public void stop() {
         exit = true;
     }
 
-    public void updateTelemetry(){
+    public void updateTelemetry() {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
 
         telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
@@ -433,7 +445,7 @@ public class basketAuto extends OpMode {
     }
 
     public void moveToPos(double inches, double speed) {
-        int move = (int)(Math.round(inches * conversion));
+        int move = (int) (Math.round(inches * conversion));
 /*        currentInches = Math.abs(inches);
         if (currentInches > 5) {
             frontLeftDistance = (frontLeftMotor.getCurrentPosition() + move);
@@ -460,8 +472,9 @@ public class basketAuto extends OpMode {
         currentDriveState = DriveState.MOVING;
 
     }
+
     public void strafeToPos(double inches, double speed) {
-        int move = (int)(Math.round(inches * conversion));
+        int move = (int) (Math.round(inches * conversion));
 
 /*        currentInches = Math.abs(inches);
         if (currentInches > 5) {
@@ -489,8 +502,9 @@ public class basketAuto extends OpMode {
         currentStrafeState = StrafeState.MOVING;
 
     }
-    public void moveSlideNormal(double inches, double speed){
-        int move = (int)(Math.round(inches * cpiSlide));
+
+    public void moveSlideNormal(double inches, double speed) {
+        int move = (int) (Math.round(inches * cpiSlide));
         slideMotor.setTargetPosition(slideMotor.getCurrentPosition() + move);
 
         slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -499,6 +513,7 @@ public class basketAuto extends OpMode {
         currentSlideState = SlideState.MOVING;
 
     }
+
     public void moveJoint(double inches, double speed) {
         int move = (int) (Math.round(inches * cpiSlide * 3));
         jointMotor.setTargetPosition(move);
@@ -507,20 +522,23 @@ public class basketAuto extends OpMode {
 
         jointMotor.setPower(speed);
     }
-    public void setTargetArm(int target){
+
+    public void setTargetArm(int target) {
         armTarget = target;
         currentArmState = armState.MOVING;
     }
-    public void moveArm(int target){
-        armController.setPID(armP,armI,armD);
+
+    public void moveArm(int target) {
+        armController.setPID(armP, armI, armD);
         int jointPos = jointMotor.getCurrentPosition();
-        double pid = armController.calculate(jointPos,target);
+        double pid = armController.calculate(jointPos, target);
         double ff = Math.cos(Math.toRadians(target / armTicksInDegree)) * armF;
         double power = pid + ff;
         jointMotor.setPower(power);
     }
-    public void armFSM(){
-        switch (currentArmState){
+
+    public void armFSM() {
+        switch (currentArmState) {
             case IDLE:
                 int currentPos1 = jointMotor.getCurrentPosition();
                 moveArm(currentPos1);
@@ -532,26 +550,29 @@ public class basketAuto extends OpMode {
                 moveArm(armTarget);
                 double currentPos2 = jointMotor.getCurrentPosition();
 
-                if (Math.abs((armTarget - currentPos2)) < armThreshold){
+                if (Math.abs((armTarget - currentPos2)) < armThreshold) {
                     currentArmState = armState.COMPLETED;
                 }
 
         }
     }
-    public void setTargetSlide(int target){
+
+    public void setTargetSlide(int target) {
         slideTarget = target;
         currentSlideState = SlideState.MOVING;
     }
-    public void moveSlide(int target){
-        slideController.setPID(slideP,slideI,slideD);
+
+    public void moveSlide(int target) {
+        slideController.setPID(slideP, slideI, slideD);
         int slidePos = slideMotor.getCurrentPosition();
-        double pid = slideController.calculate(slidePos,target);
+        double pid = slideController.calculate(slidePos, target);
         double ff = Math.cos(Math.toRadians(target / slideTicksInDegree)) * slideF;
         double power = pid + ff;
         slideMotor.setPower(power);
     }
-    public void slideFSM(){
-        switch (currentSlideState){
+
+    public void slideFSM() {
+        switch (currentSlideState) {
             case IDLE:
                 int currentPos1 = slideMotor.getCurrentPosition();
                 moveSlide(currentPos1);
@@ -563,14 +584,14 @@ public class basketAuto extends OpMode {
                 moveSlide(slideTarget);
                 double currentPos2 = slideMotor.getCurrentPosition();
 
-                if (Math.abs((slideTarget - currentPos2)) < slideThreshold){
+                if (Math.abs((slideTarget - currentPos2)) < slideThreshold) {
                     currentSlideState = SlideState.COMPLETED;
                 }
         }
     }
 
-    public void driveFSM(){
-        switch (currentDriveState){
+    public void driveFSM() {
+        switch (currentDriveState) {
             case IDLE:
                 break;
 
@@ -578,7 +599,7 @@ public class basketAuto extends OpMode {
                 if ((Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftMotor.getTargetPosition()) < driveTolerance
                         && Math.abs(frontRightMotor.getCurrentPosition() - frontRightMotor.getTargetPosition()) < driveTolerance
                         && Math.abs(backLeftMotor.getCurrentPosition() - backLeftMotor.getTargetPosition()) < driveTolerance
-                        && Math.abs(backRightMotor.getCurrentPosition() - backRightMotor.getTargetPosition()) < driveTolerance)){
+                        && Math.abs(backRightMotor.getCurrentPosition() - backRightMotor.getTargetPosition()) < driveTolerance)) {
 
                     frontLeftMotor.setPower(0);
                     frontRightMotor.setPower(0);
@@ -595,6 +616,7 @@ public class basketAuto extends OpMode {
                 break;
         }
     }
+
     public void strafeFSM() {
         switch (currentStrafeState) {
             case IDLE:
@@ -604,7 +626,7 @@ public class basketAuto extends OpMode {
                 if ((Math.abs(frontLeftMotor.getCurrentPosition() - frontLeftMotor.getTargetPosition()) < driveTolerance
                         && Math.abs(frontRightMotor.getCurrentPosition() - frontRightMotor.getTargetPosition()) < driveTolerance
                         && Math.abs(backLeftMotor.getCurrentPosition() - backLeftMotor.getTargetPosition()) < driveTolerance
-                        && Math.abs(backRightMotor.getCurrentPosition() - backRightMotor.getTargetPosition()) < driveTolerance)){
+                        && Math.abs(backRightMotor.getCurrentPosition() - backRightMotor.getTargetPosition()) < driveTolerance)) {
 
                     frontLeftMotor.setPower(0);
                     frontRightMotor.setPower(0);
@@ -646,15 +668,16 @@ public class basketAuto extends OpMode {
 
         return (baseSpeed + (maxSpeed - baseSpeed) * Math.sin(Math.PI * traveled));
 
-        private boolean customDelay(double seconds){
-            if (!isDelaying) {
-                delayTimer.reset();//startTimer
-                isDelaying = true;
-            }
-            if (delayTimer.seconds() >= seconds) {
-                isDelaying = false;
-                return true;
-            }
-            return false;//still delaying
+
+    }
+
+    private boolean customDelay(double seconds) {
+        if (!isDelaying) {
+            delayTimer.reset();//startTimer
+            isDelaying = true;
+        }
+        if (delayTimer.seconds() >= seconds) {
+            isDelaying = false;
+            return true;
         }
     }
